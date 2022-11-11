@@ -1,0 +1,458 @@
+---
+title: "GB generation share trends"
+subtitle: "NG ESO data"
+author: "Ben Anderson (b.anderson@soton.ac.uk)"
+date: 'Last run at: `r Sys.time()`'
+output: 
+  bookdown::html_document2:
+    fig_caption: yes
+    toc: TRUE
+    toc_depth: 4
+    toc_float: TRUE
+    code_folding: hide
+bibliography: '`r path.expand("~/bibliography.bib")`'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE) # but folded by yaml setting
+
+library(gridCarbon) # useful functions
+
+myLibs <- c("data.table", # fast data munching
+            "lubridate", # time stuff
+            "flextable", # pretty tables
+            "ggplot2", # plots obvs
+            "here", # where are we?
+            "hms" # more time stuff
+            )
+gridCarbon::load_libraries(myLibs) # load the libs (installs if not present)
+
+# local functions ----
+
+# project/repo parameters ----
+source(here::here("env.R"))
+
+rmdParams <- list()
+
+rmdParams$plotCap <- "Data: NG ESO Generation Mix\nPlot: @dataknut (b.anderson@soton.ac.uk)\nCode: https://github.com/dataknut/gridCarbon"
+```
+
+# License
+
+Code copyright the [author](https://twitter.com/dataknut) (2022)
+
+License: 
+ 
+ * [CC-BY](https://creativecommons.org/licenses/by/4.0/legalcode)
+
+To cite:
+
+ * Anderson, B, (2022) GB generation share trends: NG ESO data. https://dataknut.github.io/gridCarbon/rmd/gbGenMixTrends.html
+
+Code:
+
+ * https://github.com/dataknut/gridCarbon/blob/master/rmd/gbGenMixTrends.Rmd
+
+# Introduction
+
+Inspired by https://twitter.com/DrSimEvans/status/1508409309775994892
+
+# Data
+
+This analysis uses the [UK NG ESO generation mix](https://data.nationalgrideso.com/carbon-intensity1/historic-generation-mix/r/historic_gb_generation_mix) data. 
+
+The data contains average (mean) MW generation per half hour by source including interconnectors and storage.
+
+As far as we can work out this data does _not_ include distributed (i.e. non-grid connected) generation such as small scale wind, solar, hydro, biomass etc which is connected to the LV network. This means the ESO data is likely to _underestimate_ total generation and potentially underestimate the proportion of total generation that is renewable. It is possible that this could be fixed using embedded wind & solar generation data from the [demand update file](https://data.nationalgrideso.com/demand/daily-demand-update).
+
+The data also includes a half-hourly carbon intensity value in g CO2/kWh sourced from https://www.carbonintensity.org.uk/.
+
+```{r setOlderThan}
+rmdParams$olderThan <- 7
+```
+
+If the data we have downloaded is more than `r rmdParams$olderThan`` days old, re-download.
+
+```{r loadData}
+
+gbGenMixUrl <- "https://data.nationalgrideso.com/backend/dataset/88313ae5-94e4-4ddc-a790-593554d8c6b9/resource/f93d1835-75bc-43e5-84ad-12472b180a98/download/df_fuel_ckan.csv"
+
+gbGenMix_dt <- load_gbGenMix(url = gbGenMixUrl, 
+                      dataPath = repoParams$ukGridDataLoc,
+                      olderThan = rmdParams$olderThan)
+
+gbGenMix_dt[, dv_dateTime := lubridate::as_datetime(DATETIME)] # proper date time
+message("Data range from: ", min(gbGenMix_dt$dv_dateTime))
+message("...to: ", max(gbGenMix_dt$dv_dateTime))
+
+# add derived variables used later ----
+gbGenMix_dt[, dv_year := lubridate::year(dv_dateTime)]
+gbGenMix_dt[, dv_hour := lubridate::hour(dv_dateTime)]
+gbGenMix_dt[, dv_hms := hms::as_hms(dv_dateTime)]
+# half-hours are the start of the half hours (we think)
+
+gbGenMix_dt <- gridCarbon::add_peakPeriod(gbGenMix_dt, 
+                                      dateTime = "dv_dateTime")
+
+# check coding
+# table(gbGenMix_dt$dv_hour, gbGenMix_dt$dv_peak, useNA = "always")
+```
+
+The data covers more years than we need - we'll start at 2012 too.
+
+# Recreating DrSimEvans' plot
+
+This looks like daily data.
+
+ * Solar + wind (% of gen) vs coal + gas (& of gen))
+
+```{r simEvansData}
+# add together the % and totals we want (half-hourly)
+gbGenMix_dt[, dv_coal_gas_pc := COAL_perc + GAS_perc]
+gbGenMix_dt[, dv_solar_wind_pc := SOLAR_perc + WIND_perc]
+gbGenMix_dt[, dv_coal_gas := COAL + GAS]
+gbGenMix_dt[, dv_solar_wind := SOLAR + WIND]
+
+# keep the vars we want for clarity
+temp <- gbGenMix_dt[, .(dv_dateTime, dv_coal_gas, dv_solar_wind,
+                    dv_coal_gas_pc, dv_solar_wind_pc, GENERATION)]
+
+temp[, dv_date := lubridate::date(dv_dateTime)]
+
+# aggregate to daily data for plotting
+plotDT <- temp[,
+               .(mean_dv_solar_wind_pc = mean(dv_solar_wind_pc),
+                 mean_dv_coal_gas_pc = mean(dv_coal_gas_pc),
+                 total_dv_coal_gas = sum(dv_coal_gas),
+                 total_dv_solar_wind = sum(dv_solar_wind),
+                 total_GENERATION = sum(GENERATION),
+                 nObs = .N), # to check for days with < 48 half hours
+               keyby = .(dv_date)
+               ]
+plotDT[, dv_year := lubridate::year(dv_date)] # for plots
+plotDT[, total_dv_coal_gas_pc := total_dv_coal_gas/total_GENERATION] # daily %
+plotDT[, total_dv_solar_wind_pc := total_dv_solar_wind/total_GENERATION]
+
+message("Check for days with less than 48 hours - this will be truncated data")
+table(plotDT$nObs)
+```
+
+Figure \@ref(fig:meanGBrenewablesVsfossilHalfHourPC) shows the mean half-hourly % generation by each type per day. This is slightly convoluted - it is the mean of the sum of the 48 daily half-hourly XXX_perc values in the original data where XXX is the generation type. Unfold the code above for clarity.
+
+The smoothed curves are estimated for each year. The lines terminate at the maximum value for the year. I'm still trying to decide if they tell us anything useful.
+
+```{r meanGBrenewablesVsfossilHalfHourPC, fig.cap="Mean half-hourly % generation by each type per day"}
+
+ggplot2::ggplot(plotDT[dv_year > 2011], aes(x = mean_dv_solar_wind_pc, 
+                            y = mean_dv_coal_gas_pc,
+                            colour = as.factor(dv_year))) +
+  geom_point() +
+  geom_smooth() +
+  scale_colour_viridis_d(name = "Year") +
+  labs(x = "Solar & wind (mean % of half-hourly generation per day)",
+       y = "Coal & gas (mean % of half-hourly generation per day)",
+       caption = rmdParams$plotCap)
+
+# save it
+ggplot2::ggsave(filename = "meanGBrenewablesVsfossilHalfHourPC.png", 
+                path = here::here("rmd","plots"),
+                height = 5)
+```
+[Download](plots/meanGBrenewablesVsfossilHalfHourPC.png) plot.
+
+Figure \@ref(fig:dailyGBpcGenMix) shows the percentage of daily generation by type. This is less convoluted as it is the sum of generation per day for the two categories (solar + wind vs gas + coal) as a % of total daily generation.
+
+Again the smoothed curve is estimated for each year. 
+
+```{r dailyGBpcGenMix, fig.cap="Percentage of daily generation by type"}
+ggplot2::ggplot(plotDT[dv_year > 2011], aes(x = 100 * total_dv_solar_wind_pc, 
+                            y = 100 * total_dv_coal_gas_pc,
+                            colour = as.factor(dv_year))) +
+  geom_point() +
+  geom_smooth() +
+  scale_colour_viridis_d(name = "Year") +
+  labs(x = "Solar & wind (% of total daily generation)",
+       y = "Coal & gas (% of total daily generation)",
+       caption = rmdParams$plotCap)
+
+ggplot2::ggsave(filename = "dailyGBpcGenMix.png", 
+                path = here::here("rmd","plots"),
+                height = 5)
+```
+
+[Download](plots/dailyGBpcGenMix.png) plot.
+
+
+## Half-hourly versions of the plot
+
+Just cos we can... helpfully split into 'peak' and 'off peak' periods. 
+
+Peak period definitions:
+
+ * Morning 07:00 - 09:00
+ * Daytime 09:00 - 16:00
+ * Evening 16:00 - 21:00
+ * Night - all other times
+
+Again the smoothed curve is estimated for each year (and demand period). 
+
+```{r halfHourlyPCgenByPeakPeriod, fig.cap="Percentage of half-hourly generation by type"}
+ggplot2::ggplot(gbGenMix_dt[dv_year > 2011], aes(x = dv_solar_wind_pc, 
+                            y = dv_coal_gas_pc,
+                            colour = as.factor(dv_year))) +
+  geom_point() +
+  facet_wrap(. ~ dv_peakPeriod) +
+  geom_smooth() +
+  scale_colour_viridis_d(name = "Year") +
+  labs(x = "Solar & wind (% of half-hourly generation)",
+       y = "Coal & gas (% of half-hourly generation)",
+       caption = rmdParams$plotCap)
+
+ggplot2::ggsave(filename = "halfHourlyPCgenByPeakPeriod.png", 
+                path = here::here("rmd","plots"),
+                height = 5)
+```
+[Download](plots/halfHourlyPCgenByPeakPeriod.png) plot.
+
+# MWh generation trends
+
+Values are in MW per half hour (presumably the mean over the half-hour) so divide by 2 to give MWh.
+
+ref: https://data.nationalgrideso.com/carbon-intensity1/historic-generation-mix/r/historic_gb_generation_mix
+
+```{r longTrendsDaily}
+dt_long <- melt(gbGenMix_dt, id.vars = c("dv_dateTime", "dv_year", "dv_hms", "dv_peakPeriod", "dv_hour"))
+dt_long[, dv_date := lubridate::date(dv_dateTime)]
+
+plotDT <- dt_long[variable == "GAS" | variable == "COAL" |
+                    variable == "NUCLEAR" | variable == "WIND" |
+                    variable == "HYDRO" | variable == "IMPORTS" |
+                    variable == "HYDRO" | variable == "BIOMASS" | 
+                    variable == "OTHER" | variable == "SOLAR" |
+                    variable == "STORAGE", 
+                  .(dailyMWh = sum(as.numeric(value)/2)), # MW -> MWh
+                  keyby = .(dv_year, dv_date, variable)]
+
+# annual sum for cross-check 
+t <- plotDT[, .(sum_TWh = sum(dailyMWh/1000000)), keyby = .(Year = dv_year)]
+t[, Year := as.factor(Year)]
+gridCarbon::make_flexTable(t, caption = "Total TWh per year for cross-check")
+
+# double check
+```
+
+Note that these values are lower then the ones found in https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/1043323/Regional_Electricity_Generation_and_Supply_2016-2020.pdf although they are of the same order of magnitude (200 - 300 TWh per year).
+
+One reason for this is that Northern Ireland is excluded from the NG ESO data used here.
+
+Figure \@ref(fig:dailyGenBySource) shows individual trends.
+
+```{r dailyGenBySource, fig.height = 6, fig.cap = "Trends in daily GWh generation 2012-2022"}
+p <- ggplot2::ggplot(plotDT, aes(x = dv_date, y = dailyMWh/1000, colour = variable)) +
+  geom_line() +
+  facet_grid(variable ~ .) +
+  scale_color_viridis_d(name = "Source") +
+  labs(x = "Date",
+       y = "GWh",
+       caption = rmdParams$plotCap)
+p
+
+ggplot2::ggsave(filename = "dailyGenBySource.png", 
+                path = here::here("rmd","plots"),
+                height = 5)
+```
+
+Figure \@ref(fig:genTrendStackBySource) stacks them - spot COVID19 lockdown 2020...
+
+```{r genTrendStackBySource, fig.cap = "Trends in daily GWh generation 2012-2022 (stacked)"}
+ggplot2::ggplot(plotDT, aes(x = dv_date, y = dailyMWh/1000, fill = variable)) +
+  geom_col(position = "stack") +
+  scale_fill_viridis_d(name = "Source") +
+  labs(x = "Date",
+       y = "GWh",
+       caption = rmdParams$plotCap)
+
+ggplot2::ggsave(filename = "genTrendStackBySource.png", 
+                path = here::here("rmd","plots")
+                )
+```
+
+# Carbon intensity trends
+
+Now let's use the `CARBON_INTENSITY` variable.
+
+## Overall trends
+
+Seasons:
+
+ * Summer: Jun - Aug
+ * Autumn: Sept - Nov
+ * Winter: Dec - Feb
+ * Spring: Mar - May
+
+```{r meanCiTrendBySeason, fig.cap="Mean half-hourly carbon intensity per day 2012-2022"}
+gbGenMix_dt[, dv_date := lubridate::date(dv_dateTime)]
+gbGenMix_dt[, dv_month := lubridate::month(dv_dateTime)]
+
+gbGenMix_dt <- gridCarbon::add_season(gbGenMix_dt, 
+                                 dateVar = "dv_dateTime",
+                                 h = "N") # north
+
+plotDT <- gbGenMix_dt[, .(mean_CI = mean(CARBON_INTENSITY)), keyby = .(dv_year, dv_date, dv_season)]
+
+ggplot2::ggplot(plotDT[dv_year > 2011], aes(x = dv_date, y = mean_CI, colour = dv_season)) +
+  geom_point() +
+  scale_color_viridis_d(name = "Season") +
+  theme(legend.position = "bottom") +
+  labs(x = "Date",
+       y = "Mean g CO2e/kWh",
+       caption = rmdParams$plotCap)
+
+ggplot2::ggsave(filename = "meanCiTrendBySeason.png", 
+                path = here::here("rmd","plots")
+                )
+```
+
+
+## Annual by peak period
+
+Mean carbon intensity per year and season within peak period.
+
+Figure \@ref(fig:annualByPeak) suggests evening peak periods still have slightly higher carbon intensity and the shape of the reduction curves differ by season although rather less by period. Interestingly the sustained reduction in carbon intensity in Summer has leveled off.
+
+```{r annualmeanCIByPeak, fig.cap="Mean half-hourly carbon intensity by peak period and season 2012-2022"}
+plotDT <- gbGenMix_dt[, .(mean_CI = mean(CARBON_INTENSITY)), keyby = .(dv_year, dv_peakPeriod, dv_season)]
+
+ggplot2::ggplot(plotDT, aes(x = dv_year, y = mean_CI, colour = dv_peakPeriod)) +
+  geom_line() +
+  scale_color_viridis_d(name = "Peak period") +
+  facet_wrap(. ~ dv_season) +
+  labs(x = "Year",
+       y = "Mean g CO2e/kWh",
+       caption = rmdParams$plotCap)
+
+ggplot2::ggsave(filename = "annualMeanCIByPeak.png", 
+                path = here::here("rmd","plots")
+                )
+```
+
+# Renewables and overall generation
+
+Do we see a relationship between renewables generating and peak demand? This will be mediated by the way the electricity market works. 
+
+We may find wind curtailment (not visible here) at low demand periods where nuclear can't be shut off.
+
+First, what is the general average shape of carbon intensity and renewable generation?
+
+Figure \@ref(fig:ciProfile) shows that although the mean half-hourly carbon intensity had fallen over time (with the effect of solar in summer particularly noticeable), the morning and evening peaks are still relatively more carbon intense as demand overtakes the available renewable supply.
+
+```{r ciProfile, fig.cap = "Mean hakf-hourly carbon intensity by year and season"}
+plotDT <- gbGenMix_dt[dv_year > 2011, .(mean_ci = mean(CARBON_INTENSITY),
+                          mean_renewables_MW = mean(RENEWABLE),
+                          mean_renewables_pc = mean(RENEWABLE_perc)),
+                          keyby = .(dv_year, dv_hms, dv_season)]
+
+ggplot2::ggplot(plotDT, aes(x = dv_hms, y = mean_ci, 
+                            alpha = dv_year,
+                            group = dv_year)) +
+  geom_line() +
+  scale_alpha_continuous(name="Year") +
+  facet_wrap(. ~ dv_season) +
+  labs(x = "Time of day",
+       y = "Mean half-hourly carbon intensity")
+```
+
+```{r meanrenewables, fig.cap="Mean renewable generation by year and season"}
+ggplot2::ggplot(plotDT, aes(x = dv_hms, y = mean_renewables_MW, 
+                            colour = dv_year,
+                            group = dv_year)) +
+  geom_line() +
+  facet_grid(dv_season ~ .)
+
+ggplot2::ggplot(plotDT, aes(x = dv_hms, y = mean_renewables_pc, 
+                            colour = dv_year, 
+                            group = dv_year)) +
+  geom_line() +
+  facet_grid(dv_season ~ .)
+```
+
+
+```{r renewableVsGeneration}
+ggplot2::ggplot(gbGenMix_dt, aes(x = RENEWABLE, y = GENERATION)) +
+  geom_point() +
+  facet_wrap(. ~ dv_year)
+```
+
+
+```{r meanRenewablesVsMeanGen}
+plotDT <- gbGenMix_dt[, .(mean_renewables = mean(RENEWABLE),
+                 mean_generation = mean(GENERATION)),
+             keyby = .(dv_year, dv_hms, dv_peakPeriod)]
+
+ggplot2::ggplot(plotDT[year > 2016], aes(x = dv_hms, colour = dv_year)) +
+  geom_line(aes(y = mean_renewables)) 
+```
+
+```{r meanRenewablesVsMeanGenSeason}
+plotDT <- dt[, .(mean_renewables = mean(RENEWABLE),
+                 mean_generation = mean(GENERATION)),
+             keyby = .(year, hms, peakPeriod, season)]
+
+ggplot2::ggplot(plotDT[year > 2016], aes(x = mean_generation , y = mean_renewables,
+                                         colour = peakPeriod)) +
+  geom_point() +
+  scale_color_discrete(name = "Period") +
+  facet_grid(season ~ year) +
+  labs()
+```
+
+# Summary
+
+That's it. 
+
+You might want to look at recent academic research on this topic:
+
+ * [@staffell_measuring_2017]
+ * [@staffell_increasing_2018]
+
+# Annex
+
+## Data descriptors
+
+### NGESO gen mix data
+
+```{r skimESO}
+skimr::skim(gbGenMix_dt)
+```
+
+### Check definitions
+
+It is not clear from https://data.nationalgrideso.com/carbon-intensity1/historic-generation-mix/r/historic_gb_generation_mix how the following are defined:
+
+ * LOW_CARBON
+ * ZERO_CARBON
+ * RENEWABLE
+ * FOSSIL
+
+```{r checkLowCarbon}
+test2021 <- gbGenMix_dt[dv_year == 2021]
+
+#test2021[, ba_LOW_CARBON := ]
+
+```
+
+## R environment
+
+Packages etc:
+
+ * base R [@baseR]
+ * bookdown [@bookdown]
+ * data.table [@data.table]
+ * ggplot2 [@ggplot2]
+ * here [@here]
+ * hms [@hms]
+ * knitr [@knitr]
+ * lubridate [@lubridate]
+ * rmarkdown [@rmarkdown]
+
+# References
