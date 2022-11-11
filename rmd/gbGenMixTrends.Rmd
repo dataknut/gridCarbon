@@ -160,7 +160,6 @@ ggplot2::ggsave(filename = "meanGBrenewablesVsfossilHalfHourPC.png",
                 path = here::here("rmd","plots"),
                 height = 5)
 ```
-[Download](plots/meanGBrenewablesVsfossilHalfHourPC.png) plot.
 
 Figure \@ref(fig:dailyGBpcGenMix) shows the percentage of daily generation by type. This is less convoluted as it is the sum of generation per day for the two categories (solar + wind vs gas + coal) as a % of total daily generation.
 
@@ -183,8 +182,6 @@ ggplot2::ggsave(filename = "dailyGBpcGenMix.png",
                 path = here::here("rmd","plots"),
                 height = 5)
 ```
-
-[Download](plots/dailyGBpcGenMix.png) plot.
 
 
 ## Half-hourly versions of the plot
@@ -218,7 +215,7 @@ ggplot2::ggsave(filename = "halfHourlyPCgenByPeakPeriod.png",
                 path = here::here("rmd","plots"),
                 height = 5)
 ```
-[Download](plots/halfHourlyPCgenByPeakPeriod.png) plot.
+
 
 # MWh generation trends
 
@@ -347,7 +344,7 @@ ggplot2::ggsave(filename = "meanCiTrendByMonthSeason.png",
 
 Mean carbon intensity per year and season within peak period.
 
-Figure \@ref(fig:annualByPeak) suggests evening peak periods still have slightly higher carbon intensity and the shape of the reduction curves differ by season although rather less by period. Interestingly the sustained reduction in carbon intensity in Summer has leveled off.
+Figure \@ref(fig:annualmeanCIByPeak) suggests evening peak periods still have slightly higher carbon intensity and the shape of the reduction curves differ by season although rather less by period. Interestingly the sustained reduction in carbon intensity in Summer has leveled off.
 
 ```{r annualmeanCIByPeak, fig.cap="Mean half-hourly carbon intensity by peak period and season 2012-2022"}
 plotDT <- gbGenMix_dt[, .(mean_CI = mean(CARBON_INTENSITY)), keyby = .(dv_year, dv_peakPeriod, dv_season)]
@@ -453,7 +450,8 @@ ggplot2::ggplot(plotDT[dv_year > 2016], aes(x = dv_hms,
        y = "Mean renewables (MW)",
        caption = rmdParams$plotCap)
 ```
-#YMMV on \@ref(fig:meanRenewablesVsMeanGenSeason)
+
+YMMV on \@ref(fig:meanRenewablesVsMeanGenSeason)
 
 ```{r meanRenewablesVsMeanGenSeason, fig.cap="Mean renewables vs Mean total generation"}
 plotDT <- gbGenMix_dt[, .(mean_renewables = mean(RENEWABLE),
