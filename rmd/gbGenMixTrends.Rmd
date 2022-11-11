@@ -315,7 +315,7 @@ ggplot2::ggsave(filename = "meanCiTrendBySeason.png",
                 path = here::here("rmd","plots")
                 )
 ```
-Re-draw as a boxplot of mean daily CI by month - plotted at month start. \@(fig:CIboxplot) hows outliers nicely.
+Re-draw as a boxplot of mean daily CI by month - plotted at month start. \@ref(fig:CIboxplot) shows outliers nicely.
 
 ```{r CIboxplot, fig.cap="Mean daily CI boxplots per month"}
 plotDT <- gbGenMix_dt[, .(mean_CI = mean(CARBON_INTENSITY)), 
@@ -330,7 +330,7 @@ ggplot2::ggplot(plotDT[dv_year > 2011], aes(x = dv_month,
   geom_boxplot() +
   scale_color_viridis_d(name = "Season") +
   theme(legend.position = "bottom") +
-  labs(x = "Date",
+  labs(x = "Month",
        y = "Mean g CO2e/kWh",
        caption = rmdParams$plotCap)
 
