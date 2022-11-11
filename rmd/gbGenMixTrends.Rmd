@@ -34,7 +34,7 @@ source(here::here("env.R"))
 
 rmdParams <- list()
 
-rmdParams$plotCap <- "Data: NG ESO Generation Mix\nPlot: @dataknut (b.anderson@soton.ac.uk)\nCode: https://github.com/dataknut/gridCarbon"
+rmdParams$plotCap <- "Data: NG ESO Generation Mix\nPlot: @dataknut \nCode: https://github.com/dataknut/gridCarbon"
 ```
 
 # License
@@ -145,10 +145,12 @@ The smoothed curves are estimated for each year. The lines terminate at the maxi
 
 ggplot2::ggplot(plotDT[dv_year > 2011], aes(x = mean_dv_solar_wind_pc, 
                             y = mean_dv_coal_gas_pc,
-                            colour = as.factor(dv_year))) +
+                            colour = as.factor(dv_year),
+                            alpha = dv_year)) +
   geom_point() +
   geom_smooth() +
   scale_colour_viridis_d(name = "Year") +
+  guides(alpha = "none") +
   labs(x = "Solar & wind (mean % of half-hourly generation per day)",
        y = "Coal & gas (mean % of half-hourly generation per day)",
        caption = rmdParams$plotCap)
@@ -167,10 +169,12 @@ Again the smoothed curve is estimated for each year.
 ```{r dailyGBpcGenMix, fig.cap="Percentage of daily generation by type"}
 ggplot2::ggplot(plotDT[dv_year > 2011], aes(x = 100 * total_dv_solar_wind_pc, 
                             y = 100 * total_dv_coal_gas_pc,
-                            colour = as.factor(dv_year))) +
+                            colour = as.factor(dv_year),
+                            alpha = dv_year)) +
   geom_point() +
   geom_smooth() +
   scale_colour_viridis_d(name = "Year") +
+  guides(alpha = "none") +
   labs(x = "Solar & wind (% of total daily generation)",
        y = "Coal & gas (% of total daily generation)",
        caption = rmdParams$plotCap)
@@ -199,11 +203,13 @@ Again the smoothed curve is estimated for each year (and demand period).
 ```{r halfHourlyPCgenByPeakPeriod, fig.cap="Percentage of half-hourly generation by type"}
 ggplot2::ggplot(gbGenMix_dt[dv_year > 2011], aes(x = dv_solar_wind_pc, 
                             y = dv_coal_gas_pc,
+                            alpha = dv_year,
                             colour = as.factor(dv_year))) +
   geom_point() +
   facet_wrap(. ~ dv_peakPeriod) +
   geom_smooth() +
   scale_colour_viridis_d(name = "Year") +
+  guides(alpha = "none") +
   labs(x = "Solar & wind (% of half-hourly generation)",
        y = "Coal & gas (% of half-hourly generation)",
        caption = rmdParams$plotCap)
@@ -312,6 +318,29 @@ ggplot2::ggsave(filename = "meanCiTrendBySeason.png",
                 path = here::here("rmd","plots")
                 )
 ```
+Re-draw as a boxplot of mean daily CI by month - plotted at month start. \@(fig:CIboxplot) hows outliers nicely.
+
+```{r CIboxplot, fig.cap="Mean daily CI boxplots per month"}
+plotDT <- gbGenMix_dt[, .(mean_CI = mean(CARBON_INTENSITY)), 
+                     keyby = .(dv_year, 
+                               dv_date,
+                               dv_season)]
+plotDT[, dv_month := lubridate::floor_date(dv_date, unit = "months"),]
+ggplot2::ggplot(plotDT[dv_year > 2011], aes(x = dv_month, 
+                                            y = mean_CI, 
+                                            group = dv_month,
+                                            colour = dv_season)) +
+  geom_boxplot() +
+  scale_color_viridis_d(name = "Season") +
+  theme(legend.position = "bottom") +
+  labs(x = "Date",
+       y = "Mean g CO2e/kWh",
+       caption = rmdParams$plotCap)
+
+ggplot2::ggsave(filename = "meanCiTrendByMonthSeason.png", 
+                path = here::here("rmd","plots")
+                )
+```
 
 
 ## Annual by peak period
@@ -354,56 +383,91 @@ plotDT <- gbGenMix_dt[dv_year > 2011, .(mean_ci = mean(CARBON_INTENSITY),
 
 ggplot2::ggplot(plotDT, aes(x = dv_hms, y = mean_ci, 
                             alpha = dv_year,
+                            colour = dv_year,
                             group = dv_year)) +
   geom_line() +
   scale_alpha_continuous(name="Year") +
+  scale_color_continuous(name = "Year",
+                         low = "grey", 
+                         high = "#3CBAC6") + # UoS from Marine palette
+  theme(axis.text.x = element_text(angle = 45, hjust=1)) +
   facet_wrap(. ~ dv_season) +
   labs(x = "Time of day",
-       y = "Mean half-hourly carbon intensity")
+       y = "Mean half-hourly carbon intensity",
+       caption = rmdParams$plotCap)
 ```
 
 ```{r meanrenewables, fig.cap="Mean renewable generation by year and season"}
 ggplot2::ggplot(plotDT, aes(x = dv_hms, y = mean_renewables_MW, 
-                            colour = dv_year,
+                            colour = dv_year, 
+                            alpha = dv_year,
                             group = dv_year)) +
   geom_line() +
-  facet_grid(dv_season ~ .)
+  scale_alpha_continuous(name = "Year") +
+  scale_color_continuous(name = "Year",
+                         low = "grey", 
+                         high = "#3CBAC6") + # UoS from Marine palette
+  facet_grid(dv_season ~ .) +
+    labs(x = "Time of day",
+       y = "Mean renewables (MW)",
+       caption = rmdParams$plotCap)
 
 ggplot2::ggplot(plotDT, aes(x = dv_hms, y = mean_renewables_pc, 
                             colour = dv_year, 
+                            alpha = dv_year,
                             group = dv_year)) +
   geom_line() +
-  facet_grid(dv_season ~ .)
+  scale_alpha_continuous(name = "Year") +
+  scale_color_continuous(name = "Year",
+                         low = "grey", 
+                         high = "#3CBAC6") + # UoS from Marine palette
+  facet_grid(dv_season ~ .) +
+    labs(x = "Time of day",
+       y = "Mean renewables (MW)",
+       caption = rmdParams$plotCap)
 ```
 
 
 ```{r renewableVsGeneration}
 ggplot2::ggplot(gbGenMix_dt, aes(x = RENEWABLE, y = GENERATION)) +
   geom_point() +
-  facet_wrap(. ~ dv_year)
+  facet_wrap(. ~ dv_year) +
+  theme(axis.text.x = element_text(angle = 45, hjust=1))
 ```
 
+\@ref(fig:meanRenewablesVsMeanGen) shows the rise of solar...
 
-```{r meanRenewablesVsMeanGen}
+```{r meanRenewablesVsMeanGen, fig.cap="Mean renewables by time of day"}
 plotDT <- gbGenMix_dt[, .(mean_renewables = mean(RENEWABLE),
                  mean_generation = mean(GENERATION)),
              keyby = .(dv_year, dv_hms, dv_peakPeriod)]
 
-ggplot2::ggplot(plotDT[year > 2016], aes(x = dv_hms, colour = dv_year)) +
-  geom_line(aes(y = mean_renewables)) 
+ggplot2::ggplot(plotDT[dv_year > 2016], aes(x = dv_hms, 
+                                         colour = dv_peakPeriod,
+                                         alpha = dv_year,
+                                         group = dv_year)) +
+  geom_line(aes(y = mean_renewables)) +
+  scale_alpha_continuous(name = "Year") +
+  scale_color_discrete(name = "Peak period") +
+  labs(x = "Time of day",
+       y = "Mean renewables (MW)",
+       caption = rmdParams$plotCap)
 ```
+#YMMV on \@ref(fig:meanRenewablesVsMeanGenSeason)
 
-```{r meanRenewablesVsMeanGenSeason}
-plotDT <- dt[, .(mean_renewables = mean(RENEWABLE),
+```{r meanRenewablesVsMeanGenSeason, fig.cap="Mean renewables vs Mean total generation"}
+plotDT <- gbGenMix_dt[, .(mean_renewables = mean(RENEWABLE),
                  mean_generation = mean(GENERATION)),
-             keyby = .(year, hms, peakPeriod, season)]
+             keyby = .(dv_year, dv_hms, dv_peakPeriod, dv_season)]
 
-ggplot2::ggplot(plotDT[year > 2016], aes(x = mean_generation , y = mean_renewables,
-                                         colour = peakPeriod)) +
+ggplot2::ggplot(plotDT[dv_year > 2016], aes(x = mean_generation/1000 , y = mean_renewables/1000,
+                                         colour = dv_peakPeriod)) +
   geom_point() +
   scale_color_discrete(name = "Period") +
-  facet_grid(season ~ year) +
-  labs()
+  facet_grid(dv_season ~ dv_year) +
+  labs(x = "Mean total generation (GW)",
+       y = "Mean renewables (GW)",
+       caption = rmdParams$plotCap)
 ```
 
 # Summary
