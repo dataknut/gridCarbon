@@ -1,0 +1,65 @@
+---
+title: "NZ Electricity generation trends"
+author: "Ben Anderson"
+format: html
+editor: visual
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE) # but folded by yaml setting
+
+library(gridCarbon) # useful functions
+
+myLibs <- c("data.table", # fast data munching
+            "lubridate", # time stuff
+            "flextable", # pretty tables
+            "ggplot2", # plots obvs
+            "here", # where are we?
+            "hms" # more time stuff
+            )
+gridCarbon::load_libraries(myLibs) # load the libs (installs if not present)
+
+# local functions ----
+
+# project/repo parameters ----
+source(here::here("env.R"))
+
+rmdParams <- list()
+
+rmdParams$plotCap <- "Data: NZ Generation Mix\nPlot: @dataknut \nCode: https://github.com/dataknut/gridCarbon"
+```
+
+# License
+
+Code copyright the [author](https://twitter.com/dataknut) (2022)
+
+License: 
+ 
+ * [CC-BY](https://creativecommons.org/licenses/by/4.0/legalcode)
+
+To cite:
+
+ * Anderson, B, (2022) GB generation share trends: NG ESO data. https://dataknut.github.io/gridCarbon/rmd/gbGenMixTrends.html
+
+Code:
+
+ * https://github.com/dataknut/gridCarbon/blob/master/rmd/gbGenMixTrends.Rmd
+
+# Introduction
+
+Inspired by https://twitter.com/DrSimEvans/status/1508409309775994892
+
+# Data
+
+This analysis uses the [UK NG ESO generation mix](https://data.nationalgrideso.com/carbon-intensity1/historic-generation-mix/r/historic_gb_generation_mix) data. 
+
+The data contains average (mean) MW generation per half hour by source including interconnectors and storage.
+
+```{r}
+#| label: loadData
+years <- seq(2021,2022,1)
+dtl <- gridCarbon::load_nzGenMix(years = years)
+
+```
+
