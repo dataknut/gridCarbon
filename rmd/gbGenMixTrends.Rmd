@@ -320,6 +320,8 @@ make_NgesoPlots <- function(dt,
                                       y = dv_hms, fill = get(var))) +
     geom_tile() +
     theme(legend.position = "bottom") +
+    scale_x_date(date_labels="%b %Y",date_breaks  ="12 month") +
+    theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
     scale_fill_continuous(name = scaleLab,
                           high = highColour,
                           low = lowColour) +
@@ -348,11 +350,16 @@ make_NgesoPlots <- function(dt,
   
   
   p <- ggplot2::ggplot(plotDT, aes(x = dv_date)) +
-    theme(legend.position = "bottom")
+    theme(legend.position = "bottom") +
+    scale_x_date(date_labels="%b %Y",date_breaks  ="12 month") +
+    theme(axis.text.x = element_text(angle = 60, hjust = 1))
   
   if(minMax == "max"){
     yh <- max(plotDT$max)
-    p <- p + geom_line(aes(y = max)) +
+    p <- p + geom_line(aes(y = max, colour = max)) +
+      scale_color_continuous(name = paste0("Maximum half-hourly ", scaleLab),
+                             high = highColour,
+                             low = lowColour) +
       geom_hline(yintercept = yh, colour = highColour) +
       annotate("text", x = mean(plotDT$dv_date), 
                       y = yh*1.05, label = paste0("Maximum: ", round(yh)))
@@ -364,8 +371,11 @@ make_NgesoPlots <- function(dt,
   
   if(minMax == "min"){
     yh <- min(plotDT$min)
-    p <- p + geom_line(aes(y = min)) +
-      geom_hline(yintercept = yh, colour = lowColour) +
+    p <- p + geom_line(aes(y = min, colour = min)) +
+      scale_color_continuous(name = paste0("Minimum half-hourly ", scaleLab),
+                             high = highColour,
+                             low = lowColour) +
+  geom_hline(yintercept = yh, colour = lowColour) +
       annotate("text", x = mean(plotDT$dv_date), 
                       y = yh*1.05, label = paste0("Minimum: ", round(yh)))
     p <- p + labs(x = "Date",
@@ -397,8 +407,11 @@ rpc <- make_NgesoPlots(gbGenMix_dt[Year > 2021],
                        scaleLab = "Renewable generation (%)",
                        minMax = "max"
 )
-rpc$tile
-rpc$line
+rpc$tile +
+  scale_x_date(date_labels="%b-%Y",date_breaks  ="3 month")
+
+rpc$line +
+  scale_x_date(date_labels="%b-%Y",date_breaks  ="3 month")
 ```
 
 
@@ -436,10 +449,12 @@ ci <- make_NgesoPlots(gbGenMix_dt[Year > 2021],
                       scaleLab = "Wind %",
                       minMax = "max"
 )
-ci$tile
+ci$tile +
+  scale_x_date(date_labels="%b-%Y",date_breaks  ="3 month")
 
 
-ci$line
+ci$line +
+  scale_x_date(date_labels="%b-%Y",date_breaks  ="3 month")
 ```
 
 
@@ -504,7 +519,7 @@ ggplot2::ggsave(filename = "meanCiTrendByMonthSeason.png",
 
 Figure \@ref(fig:carbonStripesCI) shows half-hourly carbon intensity over time.
 
-```{r carbonStripesCI, fig.cap="Maximum daily half-hourly carbon intensity"}
+```{r carbonStripesCI, fig.cap="Half-hourly carbon intensity over time"}
 #plotDT <- gbGenMix_dt[, .()]
 ci <- make_NgesoPlots(gbGenMix_dt, 
                       var = "CARBON_INTENSITY",
@@ -517,7 +532,7 @@ ci$tile
 ```
 
 
-```{r}
+```{r carbonStripesCILine}
 ci$line
 ```
 
@@ -529,10 +544,12 @@ ci <- make_NgesoPlots(gbGenMix_dt[Year > 2021],
                       scaleLab = "Carbon intensity (g CO2/MW)",
                       minMax = "min"
 )
-ci$tile
+ci$tile +
+  scale_x_date(date_labels="%b-%Y",date_breaks  ="3 month")
 
 
-ci$line
+ci$line +
+  scale_x_date(date_labels="%b-%Y",date_breaks  ="3 month")
 ```
 
 
