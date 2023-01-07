@@ -75,20 +75,28 @@ If the data we have previously downloaded is more than `r rmdParams$olderThan`` 
 
 gbGenMixUrl <- "https://data.nationalgrideso.com/backend/dataset/88313ae5-94e4-4ddc-a790-593554d8c6b9/resource/f93d1835-75bc-43e5-84ad-12472b180a98/download/df_fuel_ckan.csv"
 
-gbGenMix_dt <- load_gbGenMix(url = gbGenMixUrl, 
+orig_DT <- load_gbGenMix(url = gbGenMixUrl, 
                       dataPath = repoParams$ukGridDataLoc,
                       olderThan = rmdParams$olderThan)
 
-gbGenMix_dt[, dv_dateTime := lubridate::as_datetime(DATETIME)] # proper date time
-message("Data range from: ", min(gbGenMix_dt$dv_dateTime))
-message("...to: ", max(gbGenMix_dt$dv_dateTime))
+
+orig_DT[, dv_dateTime := lubridate::as_datetime(DATETIME)] # proper date time
+message("Original data range from: ", min(orig_DT$dv_dateTime))
+message("...to: ", max(orig_DT$dv_dateTime))
 
 # add derived variables used later ----
-gbGenMix_dt[, dv_year := lubridate::year(dv_dateTime)]
-gbGenMix_dt[, dv_date := lubridate::as_date(dv_dateTime)]
-gbGenMix_dt[, dv_hour := lubridate::hour(dv_dateTime)]
-gbGenMix_dt[, dv_hms := hms::as_hms(dv_dateTime)]
+orig_DT[, dv_year := lubridate::year(dv_dateTime)]
+orig_DT[, dv_date := lubridate::as_date(dv_dateTime)]
+orig_DT[, dv_hour := lubridate::hour(dv_dateTime)]
+orig_DT[, dv_hms := hms::as_hms(dv_dateTime)]
 # half-hours are the start of the half hours (we think)
+
+message("Remove incomplete years to avoid weird things in plots.")
+
+gbGenMix_dt <- orig_DT[dv_year < 2023]
+
+message("Filtered data range from: ", min(gbGenMix_dt$dv_dateTime))
+message("...to: ", max(gbGenMix_dt$dv_dateTime))
 
 gbGenMix_dt <- gridCarbon::add_peakPeriod(gbGenMix_dt, 
                                       dateTime = "dv_dateTime")
@@ -283,7 +291,7 @@ ggplot2::ggsave(filename = "genTrendStackBySource.png",
                 path = here::here("rmd","plots")
                 )
 ```
-### Renewable %
+## Renewable %
 
 Defined how?
 
@@ -493,7 +501,10 @@ ggplot2::ggsave(filename = "meanCiTrendByMonthSeason.png",
                 path = here::here("rmd","plots")
                 )
 ```
-```{r carbonStripesCI}
+
+Figure \@ref(fig:carbonStripesCI) shows half-hourly carbon intensity over time.
+
+```{r carbonStripesCI, fig.cap="Maximum daily half-hourly carbon intensity"}
 #plotDT <- gbGenMix_dt[, .()]
 ci <- make_NgesoPlots(gbGenMix_dt, 
                       var = "CARBON_INTENSITY",
@@ -503,8 +514,10 @@ ci <- make_NgesoPlots(gbGenMix_dt,
                       minMax = "min"
 )
 ci$tile
+```
 
 
+```{r}
 ci$line
 ```
 
