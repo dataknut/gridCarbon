@@ -33,8 +33,6 @@ gridCarbon::load_libraries(myLibs) # load the libs (installs if not present)
 source(here::here("env.R"))
 
 rmdParams <- list()
-
-rmdParams$plotCap <- "Data: NG ESO Generation Mix\nPlot: @dataknut \nCode: https://github.com/dataknut/gridCarbon"
 ```
 
 # License
@@ -97,6 +95,11 @@ gbGenMix_dt <- gridCarbon::add_peakPeriod(gbGenMix_dt,
 
 # check coding
 # table(gbGenMix_dt$dv_hour, gbGenMix_dt$dv_peak, useNA = "always")
+
+rmdParams$plotCap <- paste0("Data: NG ESO Generation Mix ",
+                   min(gbGenMix_dt$dv_date), " - ",
+                   max(gbGenMix_dt$dv_date),
+                            "\nPlot: @dataknut \nCode: https://github.com/dataknut/gridCarbon")
 ```
 
 The data covers more years than we need - we'll start at 2012 too.
