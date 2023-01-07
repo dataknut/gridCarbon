@@ -71,7 +71,7 @@ The data also includes a half-hourly carbon intensity value in g CO2/kWh sourced
 rmdParams$olderThan <- 7
 ```
 
-If the data we have downloaded is more than `r rmdParams$olderThan`` days old, re-download.
+If the data we have previously downloaded is more than `r rmdParams$olderThan`` days old, re-download.
 
 ```{r loadData}
 
@@ -87,6 +87,7 @@ message("...to: ", max(gbGenMix_dt$dv_dateTime))
 
 # add derived variables used later ----
 gbGenMix_dt[, dv_year := lubridate::year(dv_dateTime)]
+gbGenMix_dt[, dv_date := lubridate::as_date(dv_dateTime)]
 gbGenMix_dt[, dv_hour := lubridate::hour(dv_dateTime)]
 gbGenMix_dt[, dv_hms := hms::as_hms(dv_dateTime)]
 # half-hours are the start of the half hours (we think)
@@ -279,6 +280,157 @@ ggplot2::ggsave(filename = "genTrendStackBySource.png",
                 path = here::here("rmd","plots")
                 )
 ```
+### Renewable %
+
+Defined how?
+
+we think renewable is wind + solar, low carbon includes nuclear - does this look likely?
+
+```{r testNuclear}
+# we think renewable is wind + solar, low carbon includes nuclear
+gbGenMix_dt[, Year := lubridate::year(dv_date)]
+ggplot2::ggplot(gbGenMix_dt, aes(x = RENEWABLE_perc, 
+                                   y = LOW_CARBON_perc,
+                                   colour = NUCLEAR_perc)) +
+  geom_point() +
+  facet_wrap(Year ~ .)
+```
+
+
+```{r carbonStripesRenewable}
+make_NgesoPlots <- function(dt, 
+                            var = "RENEWABLE_perc", # defaults
+                            lowColour = "green", 
+                            highColour = "red", 
+                            scaleLab = "Change me!", 
+                            minMax = "max"){
+  res <- list() # for the results
+  res$tile <- ggplot2::ggplot(dt, aes(x = dv_date, 
+                                      y = dv_hms, fill = get(var))) +
+    geom_tile() +
+    theme(legend.position = "bottom") +
+    scale_fill_continuous(name = scaleLab,
+                          high = highColour,
+                          low = lowColour) +
+    labs(x = "Date",
+         y = "Half-hour",
+         caption = rmdParams$plotCap)
+  
+  # if(minMax = "max"){
+  #   res$tile <- res$tile + 
+  #     scale_fill_continuous(name = paste0("Maximum ", scaleLab)
+  #                           )
+  # }
+  #   if(minMax = "min"){
+  #   res$tile <- res$tile + 
+  #     scale_fill_continuous(name = paste0("Half-hourly ", scaleLab)
+  #                           )
+  #   }
+  
+  # line plot
+  plotDT <- dt[,.(max = max(get(var)),
+                  mean = mean(get(var)),
+                  min = min(get(var))
+  ),
+  keyby = .(dv_date)]
+  
+  
+  
+  p <- ggplot2::ggplot(plotDT, aes(x = dv_date)) +
+    theme(legend.position = "bottom")
+  
+  if(minMax == "max"){
+    yh <- max(plotDT$max)
+    p <- p + geom_line(aes(y = max)) +
+      geom_hline(yintercept = yh, colour = highColour) +
+      annotate("text", x = mean(plotDT$dv_date), 
+                      y = yh*1.05, label = paste0("Maximum: ", round(yh)))
+    p <- p + labs(x = "Date",
+                  y = paste0("Maximum half-hourly ", scaleLab),
+                  caption = rmdParams$plotCap
+    )
+  }
+  
+  if(minMax == "min"){
+    yh <- min(plotDT$min)
+    p <- p + geom_line(aes(y = min)) +
+      geom_hline(yintercept = yh, colour = lowColour) +
+      annotate("text", x = mean(plotDT$dv_date), 
+                      y = yh*1.05, label = paste0("Minimum: ", round(yh)))
+    p <- p + labs(x = "Date",
+                  y = paste0("Minimum half-hourly ", scaleLab),
+                  caption = rmdParams$plotCap
+    )
+  }
+  res$line <- p
+  
+  return(res)
+}
+
+rpc <- make_NgesoPlots(gbGenMix_dt, 
+                       var = "RENEWABLE_perc",
+                       lowColour = "red",
+                       highColour = "green",
+                       scaleLab = "Renewable generation (%)",
+                       minMax = "max" # max line or min line?
+)
+rpc$tile
+rpc$line
+```
+
+```{r carbonStripesRenewableRecent}
+rpc <- make_NgesoPlots(gbGenMix_dt[Year > 2021], 
+                       var = "RENEWABLE_perc",
+                       lowColour = "red",
+                       highColour = "green",
+                       scaleLab = "Renewable generation (%)",
+                       minMax = "max"
+)
+rpc$tile
+rpc$line
+```
+
+
+
+## Wind %
+
+
+```{r carbonStripesWind}
+#plotDT <- gbGenMix_dt[, .()]
+ci <- make_NgesoPlots(gbGenMix_dt, 
+                      var = "WIND_perc",
+                      lowColour = "red",
+                      highColour = "green",
+                      scaleLab = "Wind %",
+                      minMax = "max"
+)
+ci$tile
+
+
+ci$line
+
+wpc <- gbGenMix_dt[, .(mean_pc = mean(WIND_perc)), keyby = .(dv_hms, Year)]
+
+ggplot2::ggplot(wpc, aes(x = dv_hms, colour = Year, group = Year, y = mean_pc)) +
+  geom_line() +
+  labs(x = "Time of day",
+       y = "% wind generation")
+```
+
+```{r carbonStripesWindRecent}
+ci <- make_NgesoPlots(gbGenMix_dt[Year > 2021], 
+                      var = "WIND_perc",
+                      lowColour = "red",
+                      highColour = "green",
+                      scaleLab = "Wind %",
+                      minMax = "max"
+)
+ci$tile
+
+
+ci$line
+```
+
 
 # Carbon intensity trends
 
@@ -337,6 +489,34 @@ ggplot2::ggplot(plotDT[dv_year > 2011], aes(x = dv_month,
 ggplot2::ggsave(filename = "meanCiTrendByMonthSeason.png", 
                 path = here::here("rmd","plots")
                 )
+```
+```{r carbonStripesCI}
+#plotDT <- gbGenMix_dt[, .()]
+ci <- make_NgesoPlots(gbGenMix_dt, 
+                      var = "CARBON_INTENSITY",
+                      lowColour = "green",
+                      highColour = "brown",
+                      scaleLab = "Carbon intensity (g CO2/MW)",
+                      minMax = "min"
+)
+ci$tile
+
+
+ci$line
+```
+
+```{r carbonStripesCIRecent}
+ci <- make_NgesoPlots(gbGenMix_dt[Year > 2021], 
+                      var = "CARBON_INTENSITY",
+                      lowColour = "green",
+                      highColour = "brown",
+                      scaleLab = "Carbon intensity (g CO2/MW)",
+                      minMax = "min"
+)
+ci$tile
+
+
+ci$line
 ```
 
 
