@@ -6,7 +6,7 @@ Authors@R:
            comment = c(ORCID = "0000-0003-2092-4406"))
 Description: Code here includes functions to load, clean and save electricity generation data from the NZ Electricty Authority and the UK NG-ESO, add derived variables such as season, peak period etc and conduct various test analyses 
 License: MIT License
-Depends:data.table, flextable, forcats, hms, lubridate, utils, curl, readr
+Depends: data.table, flextable, forcats, hms, lubridate, utils, curl, readr
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.3
