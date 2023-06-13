@@ -645,10 +645,11 @@ ggplot2::ggplot(gbGenMix_dt, aes(x = RENEWABLE, y = GENERATION)) +
   theme(axis.text.x = element_text(angle = 45, hjust=1))
 ```
 
-\@ref(fig:meanRenewablesVsMeanGen) shows the rise of solar...
+\@ref(fig:meanRenewablesByToD) shows the rise of solar...
 
-```{r meanRenewablesVsMeanGen, fig.cap="Mean renewables by time of day"}
+```{r meanRenewablesByToD, fig.cap="Mean renewables by time of day"}
 plotDT <- gbGenMix_dt[, .(mean_renewables = mean(RENEWABLE),
+                          mean_solar = mean(SOLAR),
                  mean_generation = mean(GENERATION)),
              keyby = .(dv_year, dv_hms, dv_peakPeriod)]
 
@@ -661,6 +662,17 @@ ggplot2::ggplot(plotDT[dv_year > 2016], aes(x = dv_hms,
   scale_color_discrete(name = "Peak period") +
   labs(x = "Time of day",
        y = "Mean renewables (MW)",
+       caption = rmdParams$plotCap)
+```
+
+```{r meanGenByToD, fig.cap="Comparing mean generation & 10 * solar generation by time of day for 2020"}
+ggplot2::ggplot(plotDT[dv_year == 2022], aes(x = dv_hms)) +
+  geom_line(aes(y = mean_generation)) +
+  geom_line(aes(y = mean_solar * 10), linetype = "dotdash") +
+  scale_alpha_continuous(name = "Year") +
+  scale_color_discrete(name = "Peak period") +
+  labs(x = "Time of day",
+       y = "Mean generation (MW)",
        caption = rmdParams$plotCap)
 ```
 
