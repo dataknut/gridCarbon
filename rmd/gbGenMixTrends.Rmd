@@ -59,7 +59,7 @@ Inspired by https://twitter.com/DrSimEvans/status/1508409309775994892
 
 This analysis uses the [UK NG ESO generation mix](https://data.nationalgrideso.com/carbon-intensity1/historic-generation-mix/r/historic_gb_generation_mix) data. 
 
-The data contains average (mean) MW generation per half hour by source including interconnectors and storage.
+The data contains average (mean) MW generation per half hour by source including inter-connectors and storage.
 
 As far as we can work out this data does _not_ include distributed (i.e. non-grid connected) generation such as small scale wind, solar, hydro, biomass etc which is connected to the LV network. This means the ESO data is likely to _underestimate_ total generation and potentially underestimate the proportion of total generation that is renewable. It is possible that this could be fixed using embedded wind & solar generation data from the [demand update file](https://data.nationalgrideso.com/demand/daily-demand-update).
 
@@ -96,9 +96,10 @@ orig_DT <- gridCarbon::add_season(orig_DT,
                                  dateVar = "dv_dateTime",
                                  h = "N") # north
 
-message("Remove incomplete years to avoid weird things in plots.")
+#message("Remove incomplete years to avoid weird things in plots.")
 
-gbGenMix_dt <- orig_DT[dv_year < 2023]
+#gbGenMix_dt <- orig_DT[dv_year < 2023]
+gbGenMix_dt <- orig_DT
 
 message("Filtered data range from: ", min(gbGenMix_dt$dv_dateTime))
 message("...to: ", max(gbGenMix_dt$dv_dateTime))
@@ -114,10 +115,11 @@ rmdParams$plotCap <- paste0("Data: NG ESO Generation Mix ",
                    max(gbGenMix_dt$dv_date),
                             "\nPlot: @dataknut \nCode: https://github.com/dataknut/gridCarbon")
 ```
+>Note:
+ >* the data covers more years than we need
+ >* the data may contain partial years - BEWARE incomplete years in plots using annual totals or means across all months.
 
-The data covers more years than we need - we'll start at 2012 too.
-
-# Recreating DrSimEvans' plot
+# Recreating DrSimEvans' plot (data from 2012 onwards)
 
 This looks like daily data.
 
@@ -365,6 +367,7 @@ make_NgesoPlots <- function(dt,
       scale_color_continuous(name = paste0("Maximum half-hourly ", scaleLab),
                              high = highColour,
                              low = lowColour) +
+      geom_smooth(aes(y = max), colour = "grey") +
       geom_hline(yintercept = yh, colour = highColour) +
       annotate("text", x = mean(plotDT$dv_date), 
                       y = yh*1.05, label = paste0("Maximum: ", round(yh)))
@@ -380,6 +383,7 @@ make_NgesoPlots <- function(dt,
       scale_color_continuous(name = paste0("Minimum half-hourly ", scaleLab),
                              high = highColour,
                              low = lowColour) +
+      geom_smooth(aes(y = min), colour = "grey") + 
   geom_hline(yintercept = yh, colour = lowColour) +
       annotate("text", x = mean(plotDT$dv_date), 
                       y = yh*1.05, label = paste0("Minimum: ", round(yh)))
@@ -584,7 +588,7 @@ First, what is the general average shape of carbon intensity and renewable gener
 
 Figure \@ref(fig:ciProfile) shows that although the mean half-hourly carbon intensity had fallen over time (with the effect of solar in summer particularly noticeable), the morning and evening peaks are still relatively more carbon intense as demand overtakes the available renewable supply.
 
-```{r ciProfile, fig.cap = "Mean hakf-hourly carbon intensity by year and season"}
+```{r ciProfile, fig.cap = "Mean half-hourly carbon intensity by year and season"}
 plotDT <- gbGenMix_dt[dv_year > 2011, .(mean_ci = mean(CARBON_INTENSITY),
                           mean_renewables_MW = mean(RENEWABLE),
                           mean_renewables_pc = mean(RENEWABLE_perc)),
@@ -606,8 +610,8 @@ ggplot2::ggplot(plotDT, aes(x = dv_hms, y = mean_ci,
        caption = rmdParams$plotCap)
 ```
 
-```{r meanrenewables, fig.cap="Mean renewable generation by year and season"}
-ggplot2::ggplot(plotDT, aes(x = dv_hms, y = mean_renewables_MW, 
+```{r meanrenewables, fig.cap="Mean half-hourly renewable generation by year and season"}
+ggplot2::ggplot(plotDT, aes(x = dv_hms, y = mean_renewables_MW/1000, 
                             colour = dv_year, 
                             alpha = dv_year,
                             group = dv_year)) +
@@ -618,7 +622,7 @@ ggplot2::ggplot(plotDT, aes(x = dv_hms, y = mean_renewables_MW,
                          high = "#3CBAC6") + # UoS from Marine palette
   facet_grid(dv_season ~ .) +
     labs(x = "Time of day",
-       y = "Mean renewables (MW)",
+       y = "Mean renewables (GW)",
        caption = rmdParams$plotCap)
 
 ggplot2::ggplot(plotDT, aes(x = dv_hms, y = mean_renewables_pc, 
@@ -632,7 +636,7 @@ ggplot2::ggplot(plotDT, aes(x = dv_hms, y = mean_renewables_pc,
                          high = "#3CBAC6") + # UoS from Marine palette
   facet_grid(dv_season ~ .) +
     labs(x = "Time of day",
-       y = "Mean renewables (MW)",
+       y = "Mean % renewables (%)",
        caption = rmdParams$plotCap)
 ```
 
@@ -644,9 +648,11 @@ ggplot2::ggplot(gbGenMix_dt, aes(x = RENEWABLE, y = GENERATION)) +
   theme(axis.text.x = element_text(angle = 45, hjust=1))
 ```
 
-\@ref(fig:meanRenewablesByToD) shows the rise of solar...
+\@ref(fig:meanRenewablesByToD) shows the rise of both wind and solar (mid-day peak)...
 
-```{r meanRenewablesByToD, fig.cap="Mean renewables by time of day"}
+> Beware incomplete yearss
+
+```{r meanRenewablesByToD, fig.cap="Trends in mean half-hourly renewable generation by time of day and season"}
 plotDT <- gbGenMix_dt[, .(mean_renewables = mean(RENEWABLE),
                           mean_solar = mean(SOLAR),
                  mean_generation = mean(GENERATION)),
@@ -656,24 +662,30 @@ ggplot2::ggplot(plotDT[dv_year > 2016], aes(x = dv_hms,
                                          colour = dv_peakPeriod,
                                          alpha = dv_year,
                                          group = dv_year)) +
-  geom_line(aes(y = mean_renewables)) +
+  geom_line(aes(y = mean_renewables/1000)) +
   scale_alpha_continuous(name = "Year") +
   scale_color_discrete(name = "Peak period") +
+  theme(axis.text.x = element_text(angle = 45, hjust=1)) +
+  facet_wrap(. ~ dv_season) +
   labs(x = "Time of day",
-       y = "Mean renewables (MW)",
+       y = "Mean renewables (GW)",
        caption = rmdParams$plotCap)
 ```
+What would have happened if we increased solar generation in 2022 by a factor of 10? We would have needed some storage in Spring & Summer...
 
-```{r meanGenByToD, fig.cap="Comparing mean generation & 10 * solar generation by time of day for 2020"}
+```{r meanGenByToD, fig.cap="Comparing mean total generation & 10 * solar generation by time of day for 2020"}
 
 
-ggplot2::ggplot(plotDT[dv_year == 2022], aes(x = dv_hms)) +
-  geom_line(aes(y = mean_generation)) +
-  geom_line(aes(y = mean_solar * 10), linetype = "dotdash") +
-  scale_alpha_continuous(name = "Year") +
+ggplot2::ggplot(plotDT[dv_year == 2022], aes(x = dv_hms,
+                                             colour = dv_peakPeriod,
+                                             group = dv_peakPeriod)) +
+  geom_point(aes(y = mean_generation/1000)) +
+  geom_line(aes(y = mean_solar/1000 * 10), linetype = "dotdash") +
   scale_color_discrete(name = "Peak period") +
+    theme(axis.text.x = element_text(angle = 45, hjust=1)) +
+  facet_wrap(. ~ dv_season) +
   labs(x = "Time of day",
-       y = "Mean generation (MW)",
+       y = "Mean generation (GW)",
        caption = rmdParams$plotCap)
 ```
 
