@@ -87,9 +87,14 @@ message("...to: ", max(orig_DT$dv_dateTime))
 # add derived variables used later ----
 orig_DT[, dv_year := lubridate::year(dv_dateTime)]
 orig_DT[, dv_date := lubridate::as_date(dv_dateTime)]
+orig_DT[, dv_month := lubridate::month(dv_dateTime)]
 orig_DT[, dv_hour := lubridate::hour(dv_dateTime)]
 orig_DT[, dv_hms := hms::as_hms(dv_dateTime)]
 # half-hours are the start of the half hours (we think)
+
+orig_DT <- gridCarbon::add_season(orig_DT, 
+                                 dateVar = "dv_dateTime",
+                                 h = "N") # north
 
 message("Remove incomplete years to avoid weird things in plots.")
 
@@ -472,12 +477,6 @@ Seasons:
  * Spring: Mar - May
 
 ```{r meanCiTrendBySeason, fig.cap="Mean half-hourly carbon intensity per day 2012-2022"}
-gbGenMix_dt[, dv_date := lubridate::date(dv_dateTime)]
-gbGenMix_dt[, dv_month := lubridate::month(dv_dateTime)]
-
-gbGenMix_dt <- gridCarbon::add_season(gbGenMix_dt, 
-                                 dateVar = "dv_dateTime",
-                                 h = "N") # north
 
 plotDT <- gbGenMix_dt[, .(mean_CI = mean(CARBON_INTENSITY)), keyby = .(dv_year, dv_date, dv_season)]
 
@@ -651,7 +650,7 @@ ggplot2::ggplot(gbGenMix_dt, aes(x = RENEWABLE, y = GENERATION)) +
 plotDT <- gbGenMix_dt[, .(mean_renewables = mean(RENEWABLE),
                           mean_solar = mean(SOLAR),
                  mean_generation = mean(GENERATION)),
-             keyby = .(dv_year, dv_hms, dv_peakPeriod)]
+             keyby = .(dv_year, dv_hms, dv_peakPeriod, dv_season)]
 
 ggplot2::ggplot(plotDT[dv_year > 2016], aes(x = dv_hms, 
                                          colour = dv_peakPeriod,
@@ -666,6 +665,8 @@ ggplot2::ggplot(plotDT[dv_year > 2016], aes(x = dv_hms,
 ```
 
 ```{r meanGenByToD, fig.cap="Comparing mean generation & 10 * solar generation by time of day for 2020"}
+
+
 ggplot2::ggplot(plotDT[dv_year == 2022], aes(x = dv_hms)) +
   geom_line(aes(y = mean_generation)) +
   geom_line(aes(y = mean_solar * 10), linetype = "dotdash") +
