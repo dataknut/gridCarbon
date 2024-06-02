@@ -19,13 +19,13 @@ Note that rDateTime will be NA for the DST breaks which equate to TP49/50. We re
 }
 \seealso{
 Other data: 
-\code{\link{load_nzGenMix}()}
+\code{\link{get_nzGenMix}()}
 
 Other grid: 
-\code{\link{load_nzGenMix}()}
+\code{\link{get_nzGenMix}()}
 
 Other NZ: 
-\code{\link{load_nzGenMix}()}
+\code{\link{get_nzGenMix}()}
 }
 \author{
 Ben Anderson, \email{b.anderson@soton.ac.uk} (original)

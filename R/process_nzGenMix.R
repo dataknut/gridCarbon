@@ -29,7 +29,7 @@ process_nzGenMix <- function(dt){
   m_dt[, hours := floor((as.numeric(tp)+1)/2) - 1]
   m_dt[, strTime := paste0(hours, ":", mins, ":00")]
   m_dt_clean <- m_dt[!is.na(kWh)] # kWh = NA are the broken DST half hours
-  m_dt_clean[, rTime :=  hms::as_hms(strTime)]
+  m_dt_clean[hours != 24, rTime :=  hms::as_hms(strTime)] # 24 hours = DST break
 
   # head(dt)
   m_dt_clean[, c("t","tp","mins","hours") := NULL]  #remove these now we're happy

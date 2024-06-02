@@ -33,6 +33,12 @@ gridCarbon::load_libraries(myLibs) # load the libs (installs if not present)
 source(here::here("env.R"))
 
 rmdParams <- list()
+
+rmdParams$plotPath <- here::here("rmd", "plots", "gb")
+
+if(!dir.exists(rmdParams$plotPath)){
+            dir.create(rmdParams$plotPath)
+          }
 ```
 
 # License
@@ -75,7 +81,7 @@ If the data we have previously downloaded is more than `r rmdParams$olderThan`` 
 
 gbGenMixUrl <- "https://data.nationalgrideso.com/backend/dataset/88313ae5-94e4-4ddc-a790-593554d8c6b9/resource/f93d1835-75bc-43e5-84ad-12472b180a98/download/df_fuel_ckan.csv"
 
-orig_DT <- load_gbGenMix(url = gbGenMixUrl, 
+orig_DT <- get_gbGenMix(url = gbGenMixUrl, 
                       dataPath = repoParams$ukGridDataLoc,
                       olderThan = rmdParams$olderThan)
 
@@ -176,7 +182,7 @@ ggplot2::ggplot(plotDT[dv_year > 2011], aes(x = mean_dv_solar_wind_pc,
 
 # save it
 ggplot2::ggsave(filename = "meanGBrenewablesVsfossilHalfHourPC.png", 
-                path = here::here("rmd","plots"),
+                path = rmdParams$plotPath,
                 height = 5)
 ```
 
@@ -198,7 +204,7 @@ ggplot2::ggplot(plotDT[dv_year > 2011], aes(x = 100 * total_dv_solar_wind_pc,
        caption = rmdParams$plotCap)
 
 ggplot2::ggsave(filename = "dailyGBpcGenMix.png", 
-                path = here::here("rmd","plots"),
+                path = rmdParams$plotPath,
                 height = 5)
 ```
 
@@ -231,7 +237,7 @@ ggplot2::ggplot(gbGenMix_dt[dv_year > 2011], aes(x = dv_solar_wind_pc,
        caption = rmdParams$plotCap)
 
 ggplot2::ggsave(filename = "halfHourlyPCgenByPeakPeriod.png", 
-                path = here::here("rmd","plots"),
+                path = rmdParams$plotPath,
                 height = 5)
 ```
 
@@ -280,7 +286,7 @@ p <- ggplot2::ggplot(plotDT, aes(x = dv_date, y = dailyMWh/1000, colour = variab
 p
 
 ggplot2::ggsave(filename = "dailyGenBySource.png", 
-                path = here::here("rmd","plots"),
+                path = rmdParams$plotPath,
                 height = 5)
 ```
 
@@ -295,7 +301,7 @@ ggplot2::ggplot(plotDT, aes(x = dv_date, y = dailyMWh/1000, fill = variable)) +
        caption = rmdParams$plotCap)
 
 ggplot2::ggsave(filename = "genTrendStackBySource.png", 
-                path = here::here("rmd","plots")
+                path = rmdParams$plotPath
                 )
 ```
 ## Renewable %
@@ -493,7 +499,7 @@ ggplot2::ggplot(plotDT[dv_year > 2011], aes(x = dv_date, y = mean_CI, colour = d
        caption = rmdParams$plotCap)
 
 ggplot2::ggsave(filename = "meanCiTrendBySeason.png", 
-                path = here::here("rmd","plots")
+                path = rmdParams$plotPath
                 )
 ```
 Re-draw as a boxplot of mean daily CI by month - plotted at month start. \@ref(fig:CIboxplot) shows outliers nicely.
@@ -516,7 +522,7 @@ ggplot2::ggplot(plotDT[dv_year > 2011], aes(x = dv_month,
        caption = rmdParams$plotCap)
 
 ggplot2::ggsave(filename = "meanCiTrendByMonthSeason.png", 
-                path = here::here("rmd","plots")
+                path = rmdParams$plotPath
                 )
 ```
 
@@ -574,7 +580,7 @@ ggplot2::ggplot(plotDT, aes(x = dv_year, y = mean_CI, colour = dv_peakPeriod)) +
        caption = rmdParams$plotCap)
 
 ggplot2::ggsave(filename = "annualMeanCIByPeak.png", 
-                path = here::here("rmd","plots")
+                path = rmdParams$plotPath
                 )
 ```
 

@@ -2,10 +2,10 @@
 
 export(add_peakPeriod)
 export(add_season)
+export(get_gbGenMix)
+export(get_nzGenMix)
 export(gzip_file)
-export(load_gbGenMix)
 export(load_libraries)
-export(load_nzGenMix)
 export(make_flexTable)
 export(process_nzGenMix)
 import(curl)
