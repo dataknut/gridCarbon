@@ -747,6 +747,23 @@ test2021 <- gbGenMix_dt[dv_year == 2021]
 
 ```
 
+Model the carbon intensity - just for fun but so we can use it elsewhere (if we assume the same relatioonships hold!)
+
+```{r ciModel}
+base_model <- lm(CARBON_INTENSITY ~ GAS + COAL + WIND + HYDRO + SOLAR + COAL, data = gbGenMix_dt)
+
+base_model
+
+summary(base_model)
+
+base_model_year <- lm(CARBON_INTENSITY ~ GAS + COAL + WIND + HYDRO + SOLAR + COAL + dv_year, data = gbGenMix_dt)
+
+base_model_year
+
+summary(base_model_year)
+
+```
+
 ## R environment
 
 Packages etc:
