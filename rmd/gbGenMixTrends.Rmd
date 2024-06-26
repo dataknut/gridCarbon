@@ -1,7 +1,7 @@
 ---
 title: "GB generation share trends"
 subtitle: "NG ESO data"
-author: "Ben Anderson (b.anderson@soton.ac.uk)"
+author: "Ben Anderson (dataknut@icloud.com)"
 date: 'Last run at: `r Sys.time()`'
 output: 
   bookdown::html_document2:
@@ -103,9 +103,9 @@ orig_DT <- gridCarbon::add_season(orig_DT,
                                  h = "N") # north
 
 #message("Remove incomplete years to avoid weird things in plots.")
-
+# remove incomplete days (can cause weired effects)
 #gbGenMix_dt <- orig_DT[dv_year < 2023]
-gbGenMix_dt <- orig_DT
+gbGenMix_dt <- orig_DT[dv_date < max(dv_date)]
 
 message("Filtered data range from: ", min(gbGenMix_dt$dv_dateTime))
 message("...to: ", max(gbGenMix_dt$dv_dateTime))
@@ -304,6 +304,7 @@ ggplot2::ggsave(filename = "genTrendStackBySource.png",
                 path = rmdParams$plotPath
                 )
 ```
+
 ## Renewable %
 
 Defined how?
@@ -321,7 +322,7 @@ ggplot2::ggplot(gbGenMix_dt, aes(x = RENEWABLE_perc,
 ```
 
 
-```{r carbonStripesRenewable}
+```{r carbonStripesRenewable, fig.cap="Half-hourly % renewables"}
 make_NgesoPlots <- function(dt, 
                             var = "RENEWABLE_perc", # defaults
                             lowColour = "green", 
@@ -414,7 +415,7 @@ rpc$tile
 rpc$line
 ```
 
-```{r carbonStripesRenewableRecent}
+```{r carbonStripesRenewableRecent, fig.cap="Recent trends"}
 rpc <- make_NgesoPlots(gbGenMix_dt[Year > 2021], 
                        var = "RENEWABLE_perc",
                        lowColour = "red",
@@ -434,7 +435,7 @@ rpc$line +
 ## Wind %
 
 
-```{r carbonStripesWind}
+```{r carbonStripesWind, fig.cap="Wind %"}
 #plotDT <- gbGenMix_dt[, .()]
 ci <- make_NgesoPlots(gbGenMix_dt, 
                       var = "WIND_perc",
@@ -456,7 +457,7 @@ ggplot2::ggplot(wpc, aes(x = dv_hms, colour = Year, group = Year, y = mean_pc)) 
        y = "% wind generation")
 ```
 
-```{r carbonStripesWindRecent}
+```{r carbonStripesWindRecent, fig.cap="Recent wind %"}
 ci <- make_NgesoPlots(gbGenMix_dt[Year > 2021], 
                       var = "WIND_perc",
                       lowColour = "red",
@@ -545,7 +546,7 @@ ci$tile
 ci$line
 ```
 
-```{r carbonStripesCIRecent}
+```{r carbonStripesCIRecent, fig.cap="Recent"}
 ci <- make_NgesoPlots(gbGenMix_dt[Year > 2021], 
                       var = "CARBON_INTENSITY",
                       lowColour = "green",
