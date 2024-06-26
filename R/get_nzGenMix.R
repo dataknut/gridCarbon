@@ -72,10 +72,10 @@ get_nzGenMix <- function(path = "~/Dropbox/data/NZ_ElecAuth/", # default
           dtl <- dtl[, source := eafName]
           message("Converted to long form, saving it")
           rawfName <- paste0(y, "_",m,"_Generation_long.csv") # for easier filename filtering
-          if(!dir.exists(paste0(path, "/processed/monthly/"))){
-            dir.create(paste0(path, "/processed/monthly/"))
+          if(!dir.exists(paste0(path, "/processed/"))){
+            dir.create(paste0(path, "/processed/"))
           }
-          lf <- paste0(path, "/processed/monthly/", rawfName)
+          lf <- paste0(path, "/processed/", rawfName)
           data.table::fwrite(dtl, lf)
         } else {
           print(paste0("File download failed (Error = ", req$status_code, ") - does it exist at that location?"))
