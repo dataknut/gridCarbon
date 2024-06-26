@@ -9,4 +9,4 @@ Analysis of electricity generation and carbon intensity in GB and New Zealand.
    * Analysis of [GB generation mix and emissions](https://git.soton.ac.uk/ba1e12/gbLockdownElecPaper) during COVID19 2020 lockdown:
      * Anderson, B., & James, P. (2021). Covid-19 lockdown: impacts on GB electricity demand and CO2 emissions. Buildings and Cities, 2(1), 134–149. DOI: http://doi.org/10.5334/bc.77
  * NZ
-   * Analysis of New Zealand electricity generation emissions (to come)
+   * Analysis of [New Zealand electricity generation emissions](https://dataknut.github.io/gridCarbon/gbGenMixTrends.html)
