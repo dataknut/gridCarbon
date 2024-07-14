@@ -527,7 +527,7 @@ ci <- make_NgesoPlots(nzGenMix_wide_dt,
                       var = "HYDRO_perc",
                       lowColour = "red",
                       highColour = "green",
-                      scaleLab = "Solar %",
+                      scaleLab = "Hydro %",
                       minMax = "max"
 )
 ci$tile
