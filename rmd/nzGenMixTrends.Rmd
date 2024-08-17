@@ -622,7 +622,7 @@ and distribution losses. "
 
 2020 value = 0.120 kg CO2/kWh
 
-Instead use a [model derived from the GB MWh generation mix for 2023](https://dataknut.github.io/gridCarbon/gbGenMixTrends.html#92_CI_model) (which may be way off but...)
+Instead use a [model derived from the GB MWh generation mix for 2023](https://dataknut.github.io/gridCarbon/gbGenMixTrends.html#tab:plotEstimates).
 
 Coefficients:
 
@@ -633,9 +633,11 @@ Coefficients:
  * HYDRO_perc:  1.147793 # why is hydro +ve?
  * SOLAR_perc: -0.335122
  
-This is (obviously) completely broken as HYDRO_perc has a +ve coefficient, it does not include a coefficient for Geothermal or Wood and the GB mix includes Nuclear, Interconnection and Storage. #YMMV
+This is (obviously) completely broken as HYDRO_perc has a +ve coefficient, the model does not include a coefficient for Geothermal or Wood and the GB mix includes Nuclear, Interconnection and Storage. #YMMV
 
 > Need to fix :-)
+
+But let's imagine it is valid... what do we see?
 
 ```{r estimateCarbonIntensity}
 # should be annual and fuel specific

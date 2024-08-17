@@ -758,7 +758,7 @@ Model the half-hourly carbon intensity - just for fun but so we can use it elsew
 
 We use just coal, gas, wind, hydro & solar as they also appear in the NZ gen mix that we'd like to apply to the model to.
 
-### All years models
+### MWh generation models
 
 Model relationship between gas, coal, wind, hydro and solar generation and carbon intensity as a linear model. Would also be interesting to test a neural network model...
 
@@ -778,11 +778,12 @@ mod2 <- lm(CARBON_INTENSITY ~ GAS + COAL + WIND + HYDRO + SOLAR + dv_year, data 
 summary(mod2)
 ggstats::ggcoef_model(mod2)
 ```
+
 ### % generation model
 
 Try a % model - a % generation model is 'normalised' so with a lot of [ceteris paribus](https://en.wikipedia.org/wiki/Ceteris_paribus) we can apply it to other generation datasets assuming all the same relationships and carbon intensities are true. Which is really a bit fanciful...
 
-All years
+#### All years (% model)
 
 ```{r ciModel_percent}
 modpc <- lm(CARBON_INTENSITY ~ GAS_perc + COAL_perc + WIND_perc + HYDRO_perc + SOLAR_perc, data = gbGenMix_dt)
@@ -791,20 +792,24 @@ ggstats::ggcoef_model(modpc)
 
 ```
 
-Just 2023
+Interestingly hydro has a +ve % coeff although not when modelled as MWh. Hydro must be correlating with higher carbon generation to meet peaks?
+
+#### 2023 (% model)
+
+Just 2023...
 
 ```{r ciModel_2023percent}
 modpc2 <- lm(CARBON_INTENSITY ~ GAS_perc + COAL_perc + WIND_perc + HYDRO_perc + SOLAR_perc, data = gbGenMix_dt[dv_year == 2023])
 
 ggstats::ggcoef_model(modpc2)
 
+summary(modpc2)
+
 ```
 
 Table \@ref(tab:plotEstimates) reports full estimates so we can re-use them.
 
 ```{r plotEstimates}
-
-summary(modpc2)
 
 knitr::kable(broom::tidy(modpc2, conf.int = TRUE),
              digits = 3, 
