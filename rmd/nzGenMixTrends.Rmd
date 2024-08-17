@@ -52,7 +52,7 @@ License:
 
 To cite:
 
- * Anderson, B, (`r lubridate::year(now())`) New Zealand generation share trends: Electricity Authority data. https://dataknut.github.io/gridCarbon/docs/nzGenMixTrends.html
+ * Anderson, B, (`r lubridate::year(now())`) New Zealand generation share trends: Electricity Authority data. https://dataknut.github.io/gridCarbon/nzGenMixTrends.html
 
 Code:
 
@@ -320,6 +320,7 @@ make_NgesoPlots <- function(dt,
                             lowColour = "green", 
                             highColour = "red", 
                             scaleLab = "Change me!", 
+                            unit_lab = "??",
                             minMax = "max"){
   res <- list() # for the results
   res$tile <- ggplot2::ggplot(dt, aes(x = dv_date, 
@@ -328,7 +329,7 @@ make_NgesoPlots <- function(dt,
     theme(legend.position = "bottom") +
     scale_x_date(date_labels="%b %Y",date_breaks  ="12 month") +
     theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
-    scale_fill_continuous(name = scaleLab,
+    scale_fill_continuous(name = paste0(scaleLab, " (", unit_lab, ")"),
                           high = highColour,
                           low = lowColour) +
     labs(x = "Date",
@@ -362,32 +363,36 @@ make_NgesoPlots <- function(dt,
   
   if(minMax == "max"){
     yh <- max(plotDT$max)
+    yLab <- paste0("Maximum half-hourly ", scaleLab, " (", unit_lab, ")")
     p <- p + geom_line(aes(y = max, colour = max)) +
-      scale_color_continuous(name = paste0("Maximum half-hourly ", scaleLab),
+      scale_color_continuous(name = yLab,
                              high = highColour,
                              low = lowColour) +
       geom_smooth(aes(y = max), colour = "grey") +
       geom_hline(yintercept = yh, colour = highColour) +
       annotate("text", x = mean(plotDT$dv_date), 
-                      y = yh*1.05, label = paste0("Maximum: ", round(yh)))
+                      y = yh*1.05, 
+               label = paste0("Maximum: ", round(yh), unit_lab))
     p <- p + labs(x = "Date",
-                  y = paste0("Maximum half-hourly ", scaleLab),
+                  y = yLab,
                   caption = rmdParams$plotCap
     )
   }
   
   if(minMax == "min"){
     yh <- min(plotDT$min)
+    yLab <- paste0("Minimum half-hourly ", scaleLab, " (", unit_lab, ")")
     p <- p + geom_line(aes(y = min, colour = min)) +
-      scale_color_continuous(name = paste0("Minimum half-hourly ", scaleLab),
+      scale_color_continuous(name = yLab,
                              high = highColour,
                              low = lowColour) +
       geom_smooth(aes(y = min), colour = "grey") + 
   geom_hline(yintercept = yh, colour = lowColour) +
       annotate("text", x = mean(plotDT$dv_date), 
-                      y = yh*1.05, label = paste0("Minimum: ", round(yh)))
+                      y = yh*1.05, 
+               label = paste0("Minimum: ", round(yh), unit_lab))
     p <- p + labs(x = "Date",
-                  y = paste0("Minimum half-hourly ", scaleLab),
+                  y = yLab,
                   caption = rmdParams$plotCap
     )
   }
@@ -400,7 +405,8 @@ rpc <- make_NgesoPlots(nzGenMix_wide_dt,
                        var = "RENEWABLE_perc",
                        lowColour = "red",
                        highColour = "green",
-                       scaleLab = "Renewable generation (%)",
+                       scaleLab = "Renewable generation",
+                       unit = "%",
                        minMax = "max" # max line or min line?
 )
 rpc$tile
@@ -408,18 +414,22 @@ rpc$line
 ```
 
 ```{r carbonStripesRenewableRecent}
-rpc <- make_NgesoPlots(nzGenMix_wide_dt[dv_year > 2022], 
+
+recentDateCut <- max(nzGenMix_wide_dt$dv_date - (6*30)) # roughyl 6 months
+
+rpc <- make_NgesoPlots(nzGenMix_wide_dt[dv_date > recentDateCut], 
                        var = "RENEWABLE_perc",
                        lowColour = "red",
                        highColour = "green",
-                       scaleLab = "Renewable generation (%)",
-                       minMax = "max"
+                       scaleLab = "Renewable generation",
+                       minMax = "max",
+                       unit_lab = "%"
 )
 rpc$tile +
-  scale_x_date(date_labels="%b-%Y",date_breaks  ="3 month")
+  scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
 
 rpc$line +
-  scale_x_date(date_labels="%b-%Y",date_breaks  ="3 month")
+  scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
 
 wpc <- nzGenMix_wide_dt[, .(mean_pc = mean(RENEWABLE_perc)), keyby = .(dv_hms, 
                                                                   Year = dv_year)]
@@ -442,8 +452,9 @@ ci <- make_NgesoPlots(nzGenMix_wide_dt,
                       var = "WIND_perc",
                       lowColour = "red",
                       highColour = "green",
-                      scaleLab = "Wind %",
-                      minMax = "max"
+                      scaleLab = "Wind",
+                      minMax = "max",
+                      unit_lab = "%"
 )
 ci$tile
 
@@ -460,19 +471,20 @@ ggplot2::ggplot(wpc, aes(x = dv_hms, alpha = Year, group = Year, y = mean_pc)) +
 ```
 
 ```{r carbonStripesWindRecent}
-ci <- make_NgesoPlots(nzGenMix_wide_dt[dv_year > 2022], 
+ci <- make_NgesoPlots(nzGenMix_wide_dt[dv_date > recentDateCut], 
                       var = "WIND_perc",
                       lowColour = "red",
                       highColour = "green",
-                      scaleLab = "Wind %",
-                      minMax = "max"
+                      scaleLab = "Wind",
+                      minMax = "max",
+                      unit_lab = "%"
 )
 ci$tile +
-  scale_x_date(date_labels="%b-%Y",date_breaks  ="3 month")
+  scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
 
 
 ci$line +
-  scale_x_date(date_labels="%b-%Y",date_breaks  ="3 month")
+  scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
 ```
 
 ## Solar %
@@ -485,8 +497,9 @@ ci <- make_NgesoPlots(nzGenMix_wide_dt,
                       var = "SOLAR_perc",
                       lowColour = "red",
                       highColour = "green",
-                      scaleLab = "Solar %",
-                      minMax = "max"
+                      scaleLab = "Solar",
+                      minMax = "max",
+                      unit_lab = "%"
 )
 ci$tile
 
@@ -503,19 +516,20 @@ ggplot2::ggplot(wpc, aes(x = dv_hms, alpha = Year, group = Year, y = mean_pc)) +
 ```
 
 ```{r carbonStripesSolarRecent}
-ci <- make_NgesoPlots(nzGenMix_wide_dt[dv_year > 2022], 
+ci <- make_NgesoPlots(nzGenMix_wide_dt[dv_date > recentDateCut], 
                       var = "SOLAR_perc",
                       lowColour = "red",
                       highColour = "green",
-                      scaleLab = "Wind %",
-                      minMax = "max"
+                      scaleLab = "Solar",
+                      minMax = "max",
+                      unit_lab = "%"
 )
 ci$tile +
-  scale_x_date(date_labels="%b-%Y",date_breaks  ="3 month")
+  scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
 
 
 ci$line +
-  scale_x_date(date_labels="%b-%Y",date_breaks  ="3 month")
+  scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
 ```
 
 ## Hydro %
@@ -527,8 +541,9 @@ ci <- make_NgesoPlots(nzGenMix_wide_dt,
                       var = "HYDRO_perc",
                       lowColour = "red",
                       highColour = "green",
-                      scaleLab = "Hydro %",
-                      minMax = "max"
+                      scaleLab = "Hydro",
+                      minMax = "max",
+                      unit_lab = "%"
 )
 ci$tile
 
@@ -545,19 +560,20 @@ ggplot2::ggplot(wpc, aes(x = dv_hms, alpha = Year, group = Year, y = mean_pc)) +
 ```
 
 ```{r carbonStripesHydroRecent}
-ci <- make_NgesoPlots(nzGenMix_wide_dt[dv_year > 2022], 
+ci <- make_NgesoPlots(nzGenMix_wide_dt[dv_date > recentDateCut], 
                       var = "HYDRO_perc",
                       lowColour = "red",
                       highColour = "green",
-                      scaleLab = "Hydro %",
+                      scaleLab = "Hydro",
+                      unit_lab = "%",
                       minMax = "max"
 )
 ci$tile +
-  scale_x_date(date_labels="%b-%Y",date_breaks  ="3 month")
+  scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
 
 
 ci$line +
-  scale_x_date(date_labels="%b-%Y",date_breaks  ="3 month")
+  scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
 ```
 
 ## Geothermal %
@@ -569,8 +585,9 @@ ci <- make_NgesoPlots(nzGenMix_wide_dt,
                       var = "GEO_perc",
                       lowColour = "red",
                       highColour = "green",
-                      scaleLab = "Solar %",
-                      minMax = "max"
+                      scaleLab = "Geothermal",
+                      minMax = "max",
+                      unit_lab = "%"
 )
 ci$tile
 
@@ -587,20 +604,111 @@ ggplot2::ggplot(wpc, aes(x = dv_hms, alpha = Year, group = Year, y = mean_pc)) +
 ```
 
 ```{r carbonStripesGeoRecent}
-ci <- make_NgesoPlots(nzGenMix_wide_dt[dv_year > 2022], 
+ci <- make_NgesoPlots(nzGenMix_wide_dt[dv_date > recentDateCut], 
                       var = "GEO_perc",
                       lowColour = "red",
                       highColour = "green",
-                      scaleLab = "Geothermal %",
-                      minMax = "max"
+                      scaleLab = "Geothermal",
+                      minMax = "max",
+                      unit_lab = "%"
 )
 ci$tile +
-  scale_x_date(date_labels="%b-%Y",date_breaks  ="3 month")
+  scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
 
 
 ci$line +
-  scale_x_date(date_labels="%b-%Y",date_breaks  ="3 month")
+  scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
 ```
+
+
+## Gas %
+
+```{r carbonStripesGas}
+#plotDT <- gbGenMix_dt[, .()]
+nzGenMix_wide_dt[, GAS_perc := 100*Gas/dv_total]
+ci <- make_NgesoPlots(nzGenMix_wide_dt, 
+                      var = "GAS_perc",
+                      lowColour = "green",
+                      highColour = "red",
+                      scaleLab = "Gas",
+                      minMax = "max",
+                      unit_lab = "%"
+)
+ci$tile
+
+
+ci$line
+
+wpc <- nzGenMix_wide_dt[, .(mean_pc = mean(GAS_perc)), keyby = .(dv_hms, 
+                                                                  Year = dv_year)]
+
+ggplot2::ggplot(wpc, aes(x = dv_hms, alpha = Year, group = Year, y = mean_pc)) +
+  geom_line() +
+  labs(x = "Time of day",
+       y = "% gas generation")
+```
+
+```{r carbonStripesGasRecent}
+ci <- make_NgesoPlots(nzGenMix_wide_dt[dv_date > recentDateCut], 
+                      var = "GEO_perc",
+                      lowColour = "green",
+                      highColour = "red",
+                      scaleLab = "Gas",
+                      minMax = "max",
+                      unit_lab = "%"
+)
+ci$tile +
+  scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
+
+
+ci$line +
+  scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
+```
+
+## Coal %
+
+```{r carbonStripesCoal}
+#plotDT <- gbGenMix_dt[, .()]
+nzGenMix_wide_dt[, COAL_perc := 100*Coal/dv_total]
+ci <- make_NgesoPlots(nzGenMix_wide_dt, 
+                      var = "COAL_perc",
+                      lowColour = "green",
+                      highColour = "red",
+                      scaleLab = "Coal",
+                      minMax = "max",
+                      unit_lab = "%"
+)
+ci$tile
+
+
+ci$line
+
+wpc <- nzGenMix_wide_dt[, .(mean_pc = mean(COAL_perc)), keyby = .(dv_hms, 
+                                                                  Year = dv_year)]
+
+ggplot2::ggplot(wpc, aes(x = dv_hms, alpha = Year, group = Year, y = mean_pc)) +
+  geom_line() +
+  labs(x = "Time of day",
+       y = "% coal generation")
+```
+
+```{r carbonStripesCoalRecent}
+ci <- make_NgesoPlots(nzGenMix_wide_dt[dv_date > recentDateCut], 
+                      var = "COAL_perc",
+                      lowColour = "green",
+                      highColour = "red",
+                      scaleLab = "Coal",
+                      minMax = "max",
+                      unit_lab = "%"
+)
+ci$tile +
+  scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
+
+
+ci$line +
+  scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
+```
+
 
 # Carbon intensity trends
 
