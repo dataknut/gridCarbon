@@ -41,9 +41,9 @@ if(!dir.exists(rmdParams$plotPath)){
           }
 ```
 
-# License
+# About
 
-Code copyright the [author](https://twitter.com/dataknut) (2022)
+Code copyright (c) `r lubridate::year(now())` the [author](https://www.linkedin.com/in/dataknut/)
 
 License: 
  
@@ -51,11 +51,11 @@ License:
 
 To cite:
 
- * Anderson, B, (2022) GB generation share trends: NG ESO data. https://dataknut.github.io/gridCarbon/rmd/gbGenMixTrends.html
+ * Anderson, B, (`r lubridate::year(now())`) GB generation share trends: NG ESO data. https://dataknut.github.io/gridCarbon/gbGenMixTrends.html
 
 Code:
 
- * https://github.com/dataknut/gridCarbon/blob/master/rmd/gbGenMixTrends.Rmd
+ * https://github.com/dataknut/gridCarbon
 
 # Introduction
 
@@ -752,35 +752,42 @@ test2021 <- gbGenMix_dt[dv_year == 2021]
 
 Model the half-hourly carbon intensity - just for fun but so we can use it elsewhere (if we assume the same relationships hold!)
 
-```{r ciModel}
-base_model <- lm(CARBON_INTENSITY ~ GAS + COAL + WIND + HYDRO + SOLAR + COAL, data = gbGenMix_dt)
+### All years models
 
-base_model
+Model relationship between gas, coal, wind, hydro and solar generation and carbon intensity as a linear model. Would also be interesting to test a neural network model...
+
+```{r ciModelallYears}
+base_model <- lm(CARBON_INTENSITY ~ GAS + COAL + WIND + HYDRO + SOLAR, data = gbGenMix_dt)
 
 summary(base_model)
+```
 
-base_model_year <- lm(CARBON_INTENSITY ~ GAS + COAL + WIND + HYDRO + SOLAR + COAL + dv_year, data = gbGenMix_dt)
+As above but add year as a co-variate
 
-base_model_year
+```{r ciModelallYears2}
+base_model_year <- lm(CARBON_INTENSITY ~ GAS + COAL + WIND + HYDRO + SOLAR + dv_year, data = gbGenMix_dt)
 
 summary(base_model_year)
 
 ```
+### % generation model
 
-Try a % model for 2023 only
+Try a % model - a % generation model is 'normalised'.
+
+All years
 
 ```{r ciModel_percent}
-base_model <- lm(CARBON_INTENSITY ~ GAS_perc + COAL_perc + WIND_perc + HYDRO_perc + SOLAR_perc, data = gbGenMix_dt[dv_year == 2023])
+mod <- lm(CARBON_INTENSITY ~ GAS_perc + COAL_perc + WIND_perc + HYDRO_perc + SOLAR_perc, data = gbGenMix_dt)
 
-base_model
+summary(mod)
+```
 
-summary(base_model)
+Just 2023
 
-base_model_year <- lm(CARBON_INTENSITY ~ GAS_perc + COAL_perc + WIND_perc + HYDRO_perc + SOLAR_perc + dv_year, data = gbGenMix_dt[dv_year == 2023])
+```{r ciModel_2023percent}
+mod <- lm(CARBON_INTENSITY ~ GAS_perc + COAL_perc + WIND_perc + HYDRO_perc + SOLAR_perc, data = gbGenMix_dt[dv_year == 2023])
 
-base_model_year
-
-summary(base_model_year)
+summary(mod)
 
 ```
 

@@ -42,9 +42,9 @@ if(!dir.exists(rmdParams$plotPath)){
           }
 ```
 
-# License
+# About
 
-Code copyright the [author](https://twitter.com/dataknut) (2022)
+Code copyright (c) `r lubridate::year(now())` the [author](https://www.linkedin.com/in/dataknut/)
 
 License: 
  
@@ -52,12 +52,12 @@ License:
 
 To cite:
 
- * Anderson, B, (2022) New Zealand generation share trends: Electricity Authority data. https://dataknut.github.io/gridCarbon/docs/nzGenMixTrends.html
+ * Anderson, B, (`r lubridate::year(now())`) New Zealand generation share trends: Electricity Authority data. https://dataknut.github.io/gridCarbon/docs/nzGenMixTrends.html
 
 Code:
 
- * https://github.com/dataknut/gridCarbon/blob/master/rmd/nzGenMixTrends.Rmd
-
+ * https://github.com/dataknut/gridCarbon
+ 
 # Introduction
 
 Inspired by https://twitter.com/DrSimEvans/status/1508409309775994892
@@ -622,7 +622,7 @@ and distribution losses. "
 
 2020 value = 0.120 kg CO2/kWh
 
-Instead use a model derived from the GB MWh generation mix for 2023 (which may be way off but...)
+Instead use a [model derived from the GB MWh generation mix for 2023](https://dataknut.github.io/gridCarbon/gbGenMixTrends.html#92_CI_model) (which may be way off but...)
 
 Coefficients:
 
@@ -908,7 +908,7 @@ You might want to look at recent academic research on this topic:
 
 ### NZ gen mix data
 
-```{r skimESO}
+```{r skimNZGen}
 skimr::skim(nzGenMix_wide_dt)
 ```
 
