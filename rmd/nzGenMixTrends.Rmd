@@ -625,6 +625,7 @@ and distribution losses. "
 Instead use a model derived from the GB MWh generation mix for 2023 (which may be way off but...)
 
 Coefficients:
+
  * Intercept: 41.231171 
  * GAS_perc: 3.571570 
  * COAL_perc: 10.050410

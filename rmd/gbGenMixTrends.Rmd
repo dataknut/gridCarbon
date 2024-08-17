@@ -750,7 +750,7 @@ test2021 <- gbGenMix_dt[dv_year == 2021]
 
 ## CI model
 
-Model the carbon intensity - just for fun but so we can use it elsewhere (if we assume the same relatioonships hold!)
+Model the half-hourly carbon intensity - just for fun but so we can use it elsewhere (if we assume the same relationships hold!)
 
 ```{r ciModel}
 base_model <- lm(CARBON_INTENSITY ~ GAS + COAL + WIND + HYDRO + SOLAR + COAL, data = gbGenMix_dt)
