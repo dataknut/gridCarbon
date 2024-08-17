@@ -633,7 +633,7 @@ Coefficients:
  * HYDRO_perc:  1.147793 # why is hydro +ve?
  * SOLAR_perc: -0.335122
  
-This is (obviously) completely broken as it does not include a coefficient for Geothermal or Wood and the GB mix includes Nuclear, Interconnection and Storage. #YMMV
+This is (obviously) completely broken as HYDRO_perc has a +ve coefficient, it does not include a coefficient for Geothermal or Wood and the GB mix includes Nuclear, Interconnection and Storage. #YMMV
 
 > Need to fix :-)
 

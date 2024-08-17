@@ -16,14 +16,18 @@ bibliography: '`r path.expand("~/bibliography.bib")`'
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE) # but folded by yaml setting
 
+# Libraries ----
 library(gridCarbon) # useful functions
 
 myLibs <- c("data.table", # fast data munching
-            "lubridate", # time stuff
+            "broom", # tidy models
+            "broom.helpers",
             "flextable", # pretty tables
             "ggplot2", # plots obvs
+            "ggstats", # model plots
             "here", # where are we?
-            "hms" # more time stuff
+            "hms", # hours mins secs
+            "lubridate" # time & date 
             )
 gridCarbon::load_libraries(myLibs) # load the libs (installs if not present)
 
@@ -750,46 +754,75 @@ test2021 <- gbGenMix_dt[dv_year == 2021]
 
 ## CI model
 
-Model the half-hourly carbon intensity - just for fun but so we can use it elsewhere (if we assume the same relationships hold!)
+Model the half-hourly carbon intensity - just for fun but so we can use it elsewhere (if we assume the same relationships hold!).
+
+We use just coal, gas, wind, hydro & solar as they also appear in the NZ gen mix that we'd like to apply to the model to.
 
 ### All years models
 
 Model relationship between gas, coal, wind, hydro and solar generation and carbon intensity as a linear model. Would also be interesting to test a neural network model...
 
 ```{r ciModelallYears}
-base_model <- lm(CARBON_INTENSITY ~ GAS + COAL + WIND + HYDRO + SOLAR, data = gbGenMix_dt)
+mod1 <- lm(CARBON_INTENSITY ~ GAS + COAL + WIND + HYDRO + SOLAR, data = gbGenMix_dt)
 
-summary(base_model)
+ggstats::ggcoef_model(mod1, exponentiate = FALSE)
 ```
+
+The results are pretty much what we'd expect...
 
 As above but add year as a co-variate
 
 ```{r ciModelallYears2}
-base_model_year <- lm(CARBON_INTENSITY ~ GAS + COAL + WIND + HYDRO + SOLAR + dv_year, data = gbGenMix_dt)
+mod2 <- lm(CARBON_INTENSITY ~ GAS + COAL + WIND + HYDRO + SOLAR + dv_year, data = gbGenMix_dt)
 
-summary(base_model_year)
-
+summary(mod2)
+ggstats::ggcoef_model(mod2)
 ```
 ### % generation model
 
-Try a % model - a % generation model is 'normalised'.
+Try a % model - a % generation model is 'normalised' so with a lot of [ceteris paribus](https://en.wikipedia.org/wiki/Ceteris_paribus) we can apply it to other generation datasets assuming all the same relationships and carbon intensities are true. Which is really a bit fanciful...
 
 All years
 
 ```{r ciModel_percent}
-mod <- lm(CARBON_INTENSITY ~ GAS_perc + COAL_perc + WIND_perc + HYDRO_perc + SOLAR_perc, data = gbGenMix_dt)
+modpc <- lm(CARBON_INTENSITY ~ GAS_perc + COAL_perc + WIND_perc + HYDRO_perc + SOLAR_perc, data = gbGenMix_dt)
 
-summary(mod)
+ggstats::ggcoef_model(modpc)
+
 ```
 
 Just 2023
 
 ```{r ciModel_2023percent}
-mod <- lm(CARBON_INTENSITY ~ GAS_perc + COAL_perc + WIND_perc + HYDRO_perc + SOLAR_perc, data = gbGenMix_dt[dv_year == 2023])
+modpc2 <- lm(CARBON_INTENSITY ~ GAS_perc + COAL_perc + WIND_perc + HYDRO_perc + SOLAR_perc, data = gbGenMix_dt[dv_year == 2023])
 
-summary(mod)
+ggstats::ggcoef_model(modpc2)
 
 ```
+
+Table \@ref(tab:plotEstimates) reports full estimates so we can re-use them.
+
+```{r plotEstimates}
+
+summary(modpc2)
+
+knitr::kable(broom::tidy(modpc2, conf.int = TRUE),
+             digits = 3, 
+             caption = "% generation model for half hourly carbon intentity (2023 only)")
+
+ggplot2::ggplot(modpc2_df, aes(x = term, y = estimate)) + 
+  geom_point() + 
+  geom_errorbar(aes(ymin=conf.low, 
+                    ymax=conf.high),
+                width = 0.2) +
+  labs(title = "Model results",
+       x = 'Variable',
+       y = 'Coefficient',
+       caption = paste0("Error bars = 95% CI")) +
+  coord_flip() # rotate for legibility
+```
+
+Note that in both models hydro has a positive effect on CI which is unexpected.
 
 ## R environment
 
