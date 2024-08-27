@@ -140,14 +140,19 @@ recentDateCut <- max(nzGenMix_wide_dt$dv_date - (6*30)) # roughly 6 months
 ```
 
 >Note:
- >* the data covers more years than we need
- >* the data may contain partial years - BEWARE incomplete years in plots using annual totals or means across all months.
+ 
+ >* the data _may_ cover more years than we need
+ >* the data _may_ contain partial years - BEWARE incomplete years in plots using annual totals or means across all months.
 
 # Recreating DrSimEvans' plot
 
+Inspired by https://twitter.com/DrSimEvans/status/1508409309775994892
+
+> Which explored the relationship between % renewable and fossil-fuel generation for Great Britain (see also https://dataknut.github.io/gridCarbon/gbGenMixTrends.html)
+
 This looks like daily data.
 
- * Solar + wind (% of gen) vs coal + gas (& of gen))
+ * Solar + wind (% of gen) vs coal + gas (and % of gen))
 
 ```{r simEvansData}
 # add together the % and totals we want (half-hourly)
@@ -369,6 +374,7 @@ make_NgesoPlots <- function(dt,
                             unit_lab = "??",
                             minMax = "max"){
   res <- list() # for the results
+  # tile plot ----
   res$tile <- ggplot2::ggplot(dt, aes(x = dv_date, 
                                       y = dv_hms, fill = get(var))) +
     geom_tile() +
@@ -393,12 +399,34 @@ make_NgesoPlots <- function(dt,
   #                           )
   #   }
   
-  # line plot
+  # line plots ----
   plotDT <- dt[,.(max = max(get(var)),
                   mean = mean(get(var)),
                   min = min(get(var))
   ), keyby = .(dv_date)]
   
+  #> mean half-hourly ----
+  yLab <- paste0("Mean half-hourly ", scaleLab, " (", unit_lab, ")")
+  yh <- max(plotDT$mean)
+  res$line_mean <- ggplot2::ggplot(plotDT, aes(x = dv_date, 
+                                              y = mean, colour = mean)) +
+    theme(legend.position = "bottom") +
+    scale_x_date(date_labels="%b %Y",date_breaks  ="3 month") +
+    theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+    geom_line() +
+    scale_color_continuous(name = yLab,
+                             high = highColour,
+                             low = lowColour) +
+    labs(x = "Date",
+         y = yLab,
+         caption = rmdParams$plotCap) + 
+      geom_smooth(aes(y = mean), colour = "grey") +
+      geom_hline(yintercept = yh, colour = highColour) +
+      annotate("text", x = mean(plotDT$dv_date), 
+                      y = yh*1.05, 
+               label = paste0("Maximum value: ", round(yh,1), unit_lab))
+  
+  #> max half-hourly ----
   yLab <- paste0("Maximum half-hourly ", scaleLab, " (", unit_lab, ")")
   yh <- max(plotDT$max)
   res$line_max <- ggplot2::ggplot(plotDT, aes(x = dv_date, y = max, colour = max)) +
@@ -416,9 +444,9 @@ make_NgesoPlots <- function(dt,
       geom_hline(yintercept = yh, colour = highColour) +
       annotate("text", x = mean(plotDT$dv_date), 
                       y = yh*1.05, 
-               label = paste0("Maximum: ", round(yh), unit_lab))
+               label = paste0("Historical maximum: ", round(yh,1), unit_lab))
      
-  
+  #> min half-hourly ----
   yLab <- paste0("Minimum half-hourly ", scaleLab, " (", unit_lab, ")")
   yh <- min(plotDT$min)
   res$line_min <- ggplot2::ggplot(plotDT, aes(x = dv_date, y = min, colour = min)) +
@@ -436,7 +464,7 @@ make_NgesoPlots <- function(dt,
       geom_hline(yintercept = yh, colour = highColour) +
       annotate("text", x = mean(plotDT$dv_date), 
                       y = yh*1.05, 
-               label = paste0("Minimum: ", round(yh), unit_lab)
+               label = paste0("Historical minimum: ", round(yh,1), unit_lab)
                )
   
   minDateTime <- dt[get(var) == min(plotDT$min), dv_dateTime]
@@ -468,6 +496,11 @@ results <-  make_NgesoPlots(nzGenMix_wide_dt,
 results$tile
 ```
 
+```{r renewableMeanLine, fig.cap="Mean half-hourly % renewables per day, all years"}
+results$line_mean
+
+```
+
 ```{r renewableMaxLine, fig.cap="Maximum half-hourly % renewables per day, all years"}
 results$line_max
 
@@ -493,6 +526,11 @@ results <-  make_NgesoPlots(nzGenMix_wide_dt[dv_date > recentDateCut],
 )
 results$tile +
   scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
+```
+```{r renewableMeanLineRecent, fig.cap="Mean % renewables, last 6 months"}
+results$line_mean+
+  scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
+
 ```
 
 ```{r renewableMaxLineRecent, fig.cap="Maximum % renewables, last 6 months"}
@@ -527,6 +565,12 @@ results <-  make_NgesoPlots(nzGenMix_wide_dt,
 results$tile
 ```
 
+
+```{r windMeanLine, fig.cap="Mean % wind per day, all years"}
+results$line_mean
+
+```
+
 ```{r windMaxLine, fig.cap="Maximum % wind, all years"}
 results$line_max
 
@@ -552,6 +596,14 @@ results <-  make_NgesoPlots(nzGenMix_wide_dt[dv_date > recentDateCut],
 )
 results$tile +
   scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
+```
+Figure \@ref(fig:windMeanLineRecent) shows the mean half-hourly % of wind generation per day.
+
+```{r windMeanLineRecent, fig.cap="Mean % wind, last 6 months"}
+results$line_mean +
+  scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
+
+results$maxDateReport
 ```
 
 ```{r windMaxLineRecent, fig.cap="Maximum % wind, last 6 months"}
@@ -585,6 +637,11 @@ results <-  make_NgesoPlots(nzGenMix_wide_dt,
 results$tile
 ```
 
+```{r solarMeanLine, fig.cap="Mean % solar, all years"}
+results$line_mean
+```
+
+
 ```{r solarMaxLine, fig.cap="Maximum % solar, all years"}
 results$line_max
 
@@ -610,6 +667,13 @@ results <-  make_NgesoPlots(nzGenMix_wide_dt[dv_date > recentDateCut],
 )
 results$tile +
   scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
+```
+Figure \@ref(fig:solarMeanLineRecent) shows the mean daily % of generation which is (grid) solar.
+
+```{r solarMeanLineRecent, fig.cap="Mean % solar, last 6 months"}
+results$line_mean+
+  scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
+
 ```
 
 ```{r solarMaxLineRecent, fig.cap="Maximum % solar, last 6 months"}
@@ -643,6 +707,12 @@ results <-  make_NgesoPlots(nzGenMix_wide_dt,
 results$tile
 ```
 
+
+```{r hydroMeanLine, fig.cap="Mean % hydro, all years"}
+results$line_mean
+
+```
+
 ```{r hydroMaxLine, fig.cap="Maximum % hydro, all years"}
 results$line_max
 results$maxDateReport
@@ -668,6 +738,12 @@ results <-  make_NgesoPlots(nzGenMix_wide_dt[dv_date > recentDateCut],
 results$tile +
   scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
 ```
+```{r hydroMeanLineRecent, fig.cap="Mean % hydro, last 6 months"}
+results$line_mean +
+  scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
+
+```
+
 
 ```{r hydroMaxLineRecent, fig.cap="Maximum % hydro, last 6 months"}
 results$line_max+
@@ -701,6 +777,11 @@ results <-  make_NgesoPlots(nzGenMix_wide_dt,
 results$tile
 ```
 
+
+```{r geoMeanLine, fig.cap="Mean % geothermal, all years"}
+results$line_mean
+```
+
 ```{r geoMaxLine, fig.cap="Maximum % geothermal, all years"}
 results$line_max
 
@@ -727,6 +808,13 @@ results <-  make_NgesoPlots(nzGenMix_wide_dt[dv_date > recentDateCut],
 results$tile +
   scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
 ```
+
+
+```{r geoMeanLineRecent, fig.cap="Mean % geothermal, last 6 months"}
+results$line_mean +
+  scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
+```
+
 
 ```{r geoMaxLineRecent, fig.cap="Maximum % geothermal, last 6 months"}
 results$line_max+
@@ -761,6 +849,11 @@ results <-  make_NgesoPlots(nzGenMix_wide_dt,
 results$tile
 ```
 
+```{r gasMeanLine, fig.cap="Mean % gas, all years"}
+results$line_mean
+
+```
+
 ```{r gasMaxLine, fig.cap="Maximum % gas, all years"}
 results$line_max
 
@@ -778,8 +871,8 @@ results$minDateReport
 ```{r gasTileRecent, fig.cap="% geothermal, last 6 months"}
 results <-  make_NgesoPlots(nzGenMix_wide_dt[dv_date > recentDateCut], 
                        var = "GAS_perc",
-                       lowColour = "red",
-                       highColour = "green",
+                       lowColour = "green",
+                       highColour = "red",
                        scaleLab = "Gas generation",
                        minMax = "max",
                        unit_lab = "%"
@@ -788,6 +881,11 @@ results$tile +
   scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
 ```
 
+```{r gasMeanLineRecent, fig.cap="Mean % gas, last 6 months"}
+results$line_mean +
+  scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
+
+```
 ```{r gasMaxLineRecent, fig.cap="Maximum % gas, last 6 months"}
 results$line_max+
   scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
@@ -810,14 +908,20 @@ results$minDateReport
 nzGenMix_wide_dt[, COAL_perc := 100*Coal/dv_total]
 results <-  make_NgesoPlots(nzGenMix_wide_dt, 
                        var = "COAL_perc",
-                       lowColour = "red",
-                       highColour = "green",
+                       lowColour = "green",
+                       highColour = "red",
                        scaleLab = "Coal generation",
                        unit = "%",
                        minMax = "max" # max line or min line?
 )
 results$tile+
   scale_x_date(date_labels="%b-%Y")
+```
+
+```{r coalMeanLine, fig.cap="Mean % coal, all years"}
+results$line_mean +
+  scale_x_date(date_labels="%b-%Y")
+
 ```
 
 ```{r coalMaxLine, fig.cap="Maximum % coal, all years"}
@@ -849,6 +953,12 @@ results$tile +
   scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
 ```
 
+```{r coalMeanLineRecent, fig.cap="Mean % coal, last 6 months"}
+results$line_mean +
+  scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
+
+```
+
 ```{r coalMaxLineRecent, fig.cap="Maximum % coal, last 6 months"}
 results$line_max+
   scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
@@ -865,11 +975,13 @@ results$line_min +
 
 ## All 'fuels' half-hourly trends
 
+These plots are a denser version of (e.g.) Figure \@ref(fig:dailyGenBySource) because they plot half-hourly %.
+
 ```{r allFuelsPcContrib, fig.cap="Half-hourly % contribution by fuel over time (all years)"}
 # calculate % contribution in each half hour
 # long form data
 plotDT <- nzGenMix_dt[, .(GWh = sum(kWh/1000000, na.rm = TRUE)), 
-                      keyby = .(Fuel_Code, dv_date, dv_dateTime)]
+                      keyby = .(Fuel_Code, dv_dateTime)]
 plotDT[, pc := 100*GWh/sum(GWh), keyby = .(dv_dateTime)]
 
 p <- ggplot2::ggplot(plotDT,
@@ -901,11 +1013,12 @@ fix_dateTime_axis(p) +
 
 ```{r allFuelsPcContribRecent, fig.cap="Half-hourly % contribution by fuel over time (last 6 months)"}
 # calculate % contribution in each half hour
-p <- ggplot2::ggplot(plotDT[dv_date > recentDateCut],
+p <- ggplot2::ggplot(plotDT[dv_dateTime > recentDateCut],
                 aes(x = dv_dateTime,
                     y = pc,
                     colour = Fuel_Code)) +
   geom_line() +
+    scale_colour_viridis_d() +
   labs(y = "%",
        x = "Half hour")
 
@@ -913,7 +1026,7 @@ fix_dateTime_axis(p, breaks = "1 month")
 ```
 
 ```{r allFuelsPcStackedContribRotatedRecent, fig.height=10}
-p <- ggplot2::ggplot(plotDT[dv_date > recentDateCut],
+p <- ggplot2::ggplot(plotDT[dv_dateTime > recentDateCut],
                 aes(x = dv_dateTime,
                     y = pc,
                     fill = Fuel_Code)) +
@@ -926,26 +1039,37 @@ fix_dateTime_axis(p, breaks = "1 month") +
   coord_flip()
 ```
 
-### Hydro vs wind
+### Hydro vs wind vs grid solar
 
-```{r hydroVsWind, fig.cap="Comparison of hydro vs wind % contribution over time (all years)"}
-p <- ggplot2::ggplot(plotDT[Fuel_Code == "Wind" | Fuel_Code == "Hydro"],
+```{r hydroVsWindvsSolar, fig.cap="Comparison of hydro vs wind vs solar % half-hourly contribution over time (all years)"}
+p <- ggplot2::ggplot(plotDT[Fuel_Code == "Wind" | Fuel_Code == "Hydro" |
+                              Fuel_Code == "Solar"],
                 aes(x = dv_dateTime,
                     y = pc,
                     colour = Fuel_Code)) +
   geom_line() +
-  labs(y = "%",
+  scale_colour_manual(values = c("lightblue", 
+                                 "orange", 
+                                 "green") # what colour is the wind?!
+                      ) +
+  labs(y = "% of generation",
        x = "Half hour")
 fix_dateTime_axis(p)
 ```
 
-```{r hydroVsWindRecent, fig.cap="Comparison of hydro vs wind % contribution over time (last 6 months)"}
-p <- ggplot2::ggplot(plotDT[dv_dateTime > recentDateCut & (Fuel_Code == "Wind" | Fuel_Code == "Hydro")],
+Figure \@ref(fig:hydroVsWindvsSolarRecent) shows the recent half-hourly % of generation from hydro, wind and grid solar.
+
+```{r hydroVsWindvsSolarRecent, fig.cap="Comparison of hydro vs wind vs solar % half-hourly contribution over time (last 6 months)"}
+p <- ggplot2::ggplot(plotDT[dv_dateTime > recentDateCut & (Fuel_Code == "Wind" | Fuel_Code == "Hydro" | Fuel_Code == "Solar")],
                 aes(x = dv_dateTime,
                     y = pc,
                     colour = Fuel_Code)) +
   geom_line() +
-  labs(y = "%",
+  scale_colour_manual(values = c("lightblue", 
+                                 "orange", 
+                                 "green") # what colour is the wind?!
+                      ) +
+  labs(y = "% of generation",
        x = "Half hour")
 fix_dateTime_axis(p, breaks = "1 month")
 ```
