@@ -30,16 +30,16 @@ myLibs <- c("data.table", # fast data munching
 dkUtils::loadLibraries(myLibs) # load the libs (installs if not present)
 
 # local functions ----
-fix_dateTime_axis <- function(p, breaks = "3 months"){
-  p <- p + scale_x_datetime(date_labels="%b-%Y", date_breaks = breaks) +
-  theme(axis.text.x = element_text(angle = 90, hjust=1)) 
-  return(p)
+fix_dateTime_axis <- function(plot, breaks = "3 months"){
+  plot <- plot + scale_x_datetime(date_labels="%b-%Y", date_breaks = breaks) +
+    theme(axis.text.x = element_text(angle = 90, hjust=1)) 
+  return(plot)
 }
 
-fix_date_axis <- function(p, breaks = "3 months"){
-  p <- p + scale_x_date(date_labels="%b-%Y", date_breaks = breaks) +
-  theme(axis.text.x = element_text(angle = 90, hjust=1)) 
-  return(p)
+fix_date_axis <- function(plot, breaks = "3 months"){
+  plot <- plot + scale_x_date(date_labels="%b-%Y", date_breaks = breaks) +
+    theme(axis.text.x = element_text(angle = 90, hjust=1)) 
+  return(plot)
 }
 # project/repo parameters ----
 source(here::here("env.R"))
@@ -75,7 +75,7 @@ Inspired by https://twitter.com/DrSimEvans/status/1508409309775994892
 
 # Data
 
-This analysis uses the [New Zealand electricity Authority Generation](https://www.emi.ea.govt.nz/Wholesale/Datasets/Generation/Generation_MD/) data. 
+This analysis uses the [New Zealand Electricity Authority's Generation](https://www.emi.ea.govt.nz/Wholesale/Datasets/Generation/Generation_MD/) data. 
 
 Values are in kWh per half hour https://www.emi.ea.govt.nz/Wholesale/Datasets/Generation/Generation_MD
 
@@ -336,7 +336,7 @@ Figure \@ref(fig:genTrendPCBySource) shows the % daily contribution
 ```{r genTrendPCBySource, fig.cap = "Trends in % daily contribution"}
 plotDT[, pcOfDaily := 100 * dailyMWh/sum(dailyMWh), keyby = .(dv_date)]
 
-p <- ggplot2::ggplot(plotDT, aes(x = dv_date, y = pcOfDaily, colour = Fuel_Code)) +
+p <- ggplot2::ggplot(plotDT, aes(x = dv_date, y = round(pcOfDaily,2), colour = Fuel_Code)) +
   geom_line() +
   scale_colour_viridis_d(name = "Source") +
   labs(x = "Date",
@@ -349,6 +349,33 @@ ggplot2::ggsave(p,
                 filename = "genNZTrendPCBySource.png", 
                 path = rmdParams$plotPath
                 )
+```
+Figure \@ref(fig:dailyProportionsPlotly) - interactive version
+
+```{r dailyProportionsPlotly, fig.width=8, fig.height=8, fig.cap="Interactive version"}
+
+plotly::ggplotly(p)
+
+```
+
+
+Figure \@ref(fig:dailyProportionsRecentPlotly) - interactive version
+
+```{r dailyProportionsRecentPlotly, fig.width=8, fig.height=8, fig.cap="Interactive version"}
+
+rp <- ggplot2::ggplot(plotDT[dv_date > recentDateCut], aes(x = dv_date, y = round(pcOfDaily,2), colour = Fuel_Code)) +
+  geom_line() +
+  scale_colour_viridis_d(name = "Source") +
+  labs(x = "Date",
+       y = "% of total daily GWh",
+       caption = rmdParams$plotCap) 
+
+rp <- fix_date_axis(rp)
+rp <- rp +
+  scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
+
+plotly::ggplotly(rp)
+
 ```
 
 # Detailed trends
@@ -528,7 +555,7 @@ results$tile +
   scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
 ```
 ```{r renewableMeanLineRecent, fig.cap="Mean % renewables, last 6 months"}
-results$line_mean+
+results$line_mean +
   scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
 
 ```
