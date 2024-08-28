@@ -791,7 +791,7 @@ results$minDateReport
 
 ### Geothermal % (all years)
 
-```{r geoTile, fig.cap="% solar, all years"}
+```{r geoTile, fig.cap="% geothermal, all years"}
 nzGenMix_wide_dt[, GEO_perc := 100*Geo/dv_total]
 results <-  make_NgesoPlots(nzGenMix_wide_dt, 
                        var = "GEO_perc",
@@ -857,6 +857,76 @@ results$line_min +
 results$minDateReport
 ```
 
+## Wood %
+
+Wood - potential for growth (biofuels etc, esp if forestry expansion under ETS. Oh.)
+
+### Wood % (all years)
+
+```{r woodTile, fig.cap="% wood, all years"}
+nzGenMix_wide_dt[, WOOD_perc := 100*Wood/dv_total]
+results <-  make_NgesoPlots(nzGenMix_wide_dt, 
+                       var = "WOOD_perc",
+                       lowColour = "red",
+                       highColour = "green",
+                       scaleLab = "Wood generation",
+                       unit = "%",
+                       minMax = "max" # max line or min line?
+)
+results$tile
+```
+
+```{r woodMeanLine, fig.cap="Mean % wood, all years"}
+results$line_mean
+
+```
+
+```{r woodMaxLine, fig.cap="Maximum % wood, all years"}
+results$line_max
+
+results$maxDateReport
+```
+
+```{r woodMinLine, fig.cap="Minimum % wood, all years"}
+results$line_min
+
+results$minDateReport
+```
+
+### Wood % (last 6 months)
+
+```{r woodTileRecent, fig.cap="% wood, last 6 months"}
+results <-  make_NgesoPlots(nzGenMix_wide_dt[dv_date > recentDateCut], 
+                       var = "WOOD_perc",
+                       lowColour = "red",
+                       highColour = "green",
+                       scaleLab = "Wood generation",
+                       minMax = "max",
+                       unit_lab = "%"
+)
+results$tile +
+  scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
+```
+
+```{r woodMeanLineRecent, fig.cap="Mean % wood, last 6 months"}
+results$line_mean +
+  scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
+
+```
+
+```{r woodMaxLineRecent, fig.cap="Maximum % wood, last 6 months"}
+results$line_max+
+  scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
+
+results$maxDateReport
+```
+
+```{r woodMinLineRecent, fig.cap="Minimum % wood, last 6 months"}
+results$line_min +
+  scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
+
+results$minDateReport
+```
 
 ## Gas %
 
@@ -867,8 +937,8 @@ results$minDateReport
 nzGenMix_wide_dt[, GAS_perc := 100*Gas/dv_total]
 results <-  make_NgesoPlots(nzGenMix_wide_dt, 
                        var = "GAS_perc",
-                       lowColour = "red",
-                       highColour = "green",
+                       lowColour = "green",
+                       highColour = "red",
                        scaleLab = "Gas generation",
                        unit = "%",
                        minMax = "max" # max line or min line?
@@ -895,7 +965,7 @@ results$minDateReport
 
 ### Gas % (last 6 months)
 
-```{r gasTileRecent, fig.cap="% geothermal, last 6 months"}
+```{r gasTileRecent, fig.cap="% gas, last 6 months"}
 results <-  make_NgesoPlots(nzGenMix_wide_dt[dv_date > recentDateCut], 
                        var = "GAS_perc",
                        lowColour = "green",
@@ -994,6 +1064,80 @@ results$maxDateReport
 ```
 
 ```{r coalMinLineRecent, fig.cap="Minimum % coal, last 6 months"}
+results$line_min +
+  scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
+
+#results$minDateReport
+```
+
+
+## Diesel %
+
+### Diesel % (all years)
+
+```{r dieselTile, fig.cap="% coal, all years"}
+nzGenMix_wide_dt[, DIESEL_perc := 100*Diesel/dv_total]
+results <-  make_NgesoPlots(nzGenMix_wide_dt, 
+                       var = "DIESEL_perc",
+                       lowColour = "green",
+                       highColour = "red",
+                       scaleLab = "Diesel generation",
+                       unit = "%",
+                       minMax = "max" # max line or min line?
+)
+results$tile+
+  scale_x_date(date_labels="%b-%Y")
+```
+
+```{r dieselMeanLine, fig.cap="Mean % diesel, all years"}
+results$line_mean +
+  scale_x_date(date_labels="%b-%Y")
+
+```
+
+```{r dieselMaxLine, fig.cap="Maximum % diesel, all years"}
+results$line_max+
+  scale_x_date(date_labels="%b-%Y")
+
+results$maxDateReport
+```
+
+```{r dieselMinLine, fig.cap="Minimum % diesel, all years"}
+results$line_min +
+  scale_x_date(date_labels="%b-%Y")
+
+#results$minDateReport
+```
+
+### Diesel % (last 6 months)
+
+```{r dieselTileRecent, fig.cap="% diesel, last 6 months"}
+results <-  make_NgesoPlots(nzGenMix_wide_dt[dv_date > recentDateCut], 
+                       var = "DIESEL_perc",
+                       lowColour = "green",
+                       highColour = "red",
+                       scaleLab = "Diesel generation",
+                       minMax = "max",
+                       unit_lab = "%"
+)
+results$tile +
+  scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
+```
+
+```{r dieselMeanLineRecent, fig.cap="Mean % diesel, last 6 months"}
+results$line_mean +
+  scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
+
+```
+
+```{r dieselMaxLineRecent, fig.cap="Maximum % diesel, last 6 months"}
+results$line_max+
+  scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
+
+results$maxDateReport
+```
+
+```{r dieselMinLineRecent, fig.cap="Minimum % diesel, last 6 months"}
 results$line_min +
   scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
 
@@ -1429,6 +1573,33 @@ ggplot2::ggsave(filename = "annualMeanCIByPeak.png",
 ```
 
 ## Data descriptors
+
+### NZ generation 'fuel sources'
+
+```{r}
+t <- nzGenMix_dt[, .(TWh = sum(kWh/1000000000)), keyby =.(Fuel_Code, Tech_Code)]
+
+dct <- dcast(t, Fuel_Code ~ Tech_Code)
+knitr::kable(dct, digits = 3, caption = "Fuel codes by technology code (total TWh in dataset)")
+```
+### NZ annual generation % by fuel code
+
+Table \@ref(tab:annualGenByFuelCode) shows annual GWh and % GWh by fuel code.
+
+```{r annualGenByFuelCode}
+
+t <- nzGenMix_dt[, .(GWh = sum(kWh/1000000), na.rm = TRUE),
+                 keyby = .(dv_year, Fuel_Code)]
+t[, GWh_pc := 100*GWh/sum(GWh), keyby = .(dv_year)]
+
+dct <- dcast(t, dv_year ~ Fuel_Code, value.var = "GWh")
+knitr::kable(dct, digits = 2,
+             caption = "GWh per year by Fuel Code - beware incomplete years")
+
+dct <- dcast(t, dv_year ~ Fuel_Code, value.var = "GWh_pc")
+knitr::kable(dct, digits = 1,
+             caption = "% GWh per year by Fuel Code - beware incomplete years")
+```
 
 ### NZ gen mix data
 
