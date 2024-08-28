@@ -537,7 +537,7 @@ results$maxDateReport
 ```{r renewableMinLine, fig.cap="Minimum % renewables, all years"}
 results$line_min
 
-results$minDateReport
+#results$minDateReport
 ```
 
 ### Renewable % (last 6 months)
@@ -571,7 +571,7 @@ results$maxDateReport
 results$line_min +
   scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
 
-results$minDateReport
+#results$minDateReport
 ```
 
 
@@ -607,7 +607,7 @@ results$maxDateReport
 ```{r windMinLine, fig.cap="Minimum % wind, all years"}
 results$line_min
 
-results$minDateReport
+#results$minDateReport
 ```
 
 ### Wind % (last 6 months)
@@ -644,7 +644,7 @@ results$maxDateReport
 results$line_min +
   scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
 
-results$minDateReport
+#results$minDateReport
 ```
 
 ## Solar %
@@ -748,7 +748,7 @@ results$maxDateReport
 ```{r hydroMinLine, fig.cap="Minimum % hydro, all years"}
 results$line_min
 
-results$minDateReport
+#results$minDateReport
 ```
 
 ### Hydro % (last 6 months)
@@ -783,7 +783,7 @@ results$maxDateReport
 results$line_min +
   scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
 
-results$minDateReport
+#results$minDateReport
 ```
 
 ## Geothermal %
@@ -818,7 +818,7 @@ results$maxDateReport
 ```{r geoMinLine, fig.cap="Minimum % geothermal, all years"}
 results$line_min
 
-results$minDateReport
+#results$minDateReport
 ```
 
 ### Geothermal % (last 6 months)
@@ -854,7 +854,7 @@ results$maxDateReport
 results$line_min +
   scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
 
-results$minDateReport
+#results$minDateReport
 ```
 
 ## Wood %
@@ -890,7 +890,7 @@ results$maxDateReport
 ```{r woodMinLine, fig.cap="Minimum % wood, all years"}
 results$line_min
 
-results$minDateReport
+#results$minDateReport
 ```
 
 ### Wood % (last 6 months)
@@ -925,7 +925,7 @@ results$maxDateReport
 results$line_min +
   scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
 
-results$minDateReport
+#results$minDateReport
 ```
 
 ## Gas %
@@ -960,7 +960,7 @@ results$maxDateReport
 ```{r gasMinLine, fig.cap="Minimum % gas, all years"}
 results$line_min
 
-results$minDateReport
+#results$minDateReport
 ```
 
 ### Gas % (last 6 months)
@@ -994,7 +994,7 @@ results$maxDateReport
 results$line_min +
   scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
 
-results$minDateReport
+#results$minDateReport
 ```
 
 ## Coal %
