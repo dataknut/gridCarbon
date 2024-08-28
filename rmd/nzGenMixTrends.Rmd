@@ -1040,8 +1040,8 @@ results$line_min +
 ```{r coalTileRecent, fig.cap="% coal, last 6 months"}
 results <-  make_NgesoPlots(nzGenMix_wide_dt[dv_date > recentDateCut], 
                        var = "COAL_perc",
-                       lowColour = "red",
-                       highColour = "green",
+                       lowColour = "green",
+                       highColour = "red",
                        scaleLab = "Coal generation",
                        minMax = "max",
                        unit_lab = "%"
