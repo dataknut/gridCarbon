@@ -753,7 +753,7 @@ results$line_min
 
 ### Hydro % (last 6 months)
 
-```{r hydroTileRecent, fig.cap="% solar, last 6 months"}
+```{r hydroTileRecent, fig.cap="% hydro, last 6 months"}
 results <-  make_NgesoPlots(nzGenMix_wide_dt[dv_date > recentDateCut], 
                        var = "HYDRO_perc",
                        lowColour = "red",
