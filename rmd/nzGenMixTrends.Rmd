@@ -517,7 +517,7 @@ results <-  make_NgesoPlots(nzGenMix_wide_dt,
                        lowColour = "red",
                        highColour = "green",
                        scaleLab = "Renewable generation",
-                       unit = "%",
+                       unit = "% of total",
                        minMax = "max" # max line or min line?
 )
 results$tile
@@ -549,7 +549,7 @@ results <-  make_NgesoPlots(nzGenMix_wide_dt[dv_date > recentDateCut],
                        highColour = "green",
                        scaleLab = "Renewable generation",
                        minMax = "max",
-                       unit_lab = "%"
+                       unit_lab = "% of total"
 )
 results$tile +
   scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
@@ -619,7 +619,7 @@ results <-  make_NgesoPlots(nzGenMix_wide_dt[dv_date > recentDateCut],
                        highColour = "green",
                        scaleLab = "Wind generation",
                        minMax = "max",
-                       unit_lab = "%"
+                       unit_lab = "% of total"
 )
 results$tile +
   scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
@@ -690,7 +690,7 @@ results <-  make_NgesoPlots(nzGenMix_wide_dt[dv_date > recentDateCut],
                        highColour = "green",
                        scaleLab = "Solar generation",
                        minMax = "max",
-                       unit_lab = "%"
+                       unit_lab = "% of total"
 )
 results$tile +
   scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
@@ -760,7 +760,7 @@ results <-  make_NgesoPlots(nzGenMix_wide_dt[dv_date > recentDateCut],
                        highColour = "green",
                        scaleLab = "Hydro generation",
                        minMax = "max",
-                       unit_lab = "%"
+                       unit_lab = "% of total"
 )
 results$tile +
   scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
@@ -830,7 +830,7 @@ results <-  make_NgesoPlots(nzGenMix_wide_dt[dv_date > recentDateCut],
                        highColour = "green",
                        scaleLab = "Geothermal generation",
                        minMax = "max",
-                       unit_lab = "%"
+                       unit_lab = "% of total"
 )
 results$tile +
   scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
@@ -902,7 +902,7 @@ results <-  make_NgesoPlots(nzGenMix_wide_dt[dv_date > recentDateCut],
                        highColour = "green",
                        scaleLab = "Wood generation",
                        minMax = "max",
-                       unit_lab = "%"
+                       unit_lab = "% of total"
 )
 results$tile +
   scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
@@ -972,7 +972,7 @@ results <-  make_NgesoPlots(nzGenMix_wide_dt[dv_date > recentDateCut],
                        highColour = "red",
                        scaleLab = "Gas generation",
                        minMax = "max",
-                       unit_lab = "%"
+                       unit_lab = "% of total"
 )
 results$tile +
   scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
@@ -1044,7 +1044,7 @@ results <-  make_NgesoPlots(nzGenMix_wide_dt[dv_date > recentDateCut],
                        highColour = "red",
                        scaleLab = "Coal generation",
                        minMax = "max",
-                       unit_lab = "%"
+                       unit_lab = "% of total"
 )
 results$tile +
   scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
@@ -1118,7 +1118,7 @@ results <-  make_NgesoPlots(nzGenMix_wide_dt[dv_date > recentDateCut],
                        highColour = "red",
                        scaleLab = "Diesel generation",
                        minMax = "max",
-                       unit_lab = "%"
+                       unit_lab = "% of total"
 )
 results$tile +
   scale_x_date(date_labels="%b-%Y",date_breaks  ="1 month")
