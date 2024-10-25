@@ -586,7 +586,7 @@ results <-  make_NgesoPlots(nzGenMix_wide_dt,
                        lowColour = "red",
                        highColour = "green",
                        scaleLab = "Wind generation",
-                       unit = "%",
+                       unit = "% of total",
                        minMax = "max" # max line or min line?
 )
 results$tile
@@ -728,7 +728,7 @@ results <-  make_NgesoPlots(nzGenMix_wide_dt,
                        lowColour = "red",
                        highColour = "green",
                        scaleLab = "Hydro generation",
-                       unit = "%",
+                       unit = "% of total",
                        minMax = "max" # max line or min line?
 )
 results$tile
