@@ -811,7 +811,8 @@ Table \@ref(tab:plotEstimates) reports full estimates so we can re-use them.
 
 ```{r plotEstimates}
 
-knitr::kable(broom::tidy(modpc2, conf.int = TRUE),
+modpc2_df <- broom::tidy(modpc2, conf.int = TRUE)
+knitr::kable(modpc2_df,
              digits = 3, 
              caption = "% generation model for half hourly carbon intentity (2023 only)")
 
