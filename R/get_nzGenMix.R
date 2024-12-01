@@ -62,9 +62,9 @@ get_nzGenMix <- function(path = "~/Dropbox/data/NZ_ElecAuth/", # default
         print(paste0("Trying to download ", rFile))
         req <- curl::curl_fetch_disk(rFile, "temp.csv") # https://cran.r-project.org/web/packages/curl/vignettes/intro.html
         if(req$status_code != 404){ #https://cran.r-project.org/web/packages/curl/vignettes/intro.html#exception_handling
-          #dt <- data.table::fread(req$content) # breaks on 2014-11, why?
-          df <- readr::read_csv(req$content)
-          dt <- data.table::as.data.table(df)
+          dt <- data.table::fread(req$content) # breaks on 2014-11, why?
+          #df <- readr::read_csv(req$content)
+          #dt <- data.table::as.data.table(df)
           message("File downloaded successfully, saving as ", fullFileName)
           data.table::fwrite(dt, fullFileName) # keep as .csv
           # create long form
