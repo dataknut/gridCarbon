@@ -17,6 +17,12 @@
 #' @family NZ
 #'
 process_nzGenMix <- function(dt){
+  # why why why
+  # 2010-03
+  if("Trading_date" %in% names(dt)){
+    dt[, Trading_Date := Trading_date]
+    dt$Trading_date <- NULL
+  }
   m_dt <- data.table::melt(dt,
                      id.vars=c("Site_Code","POC_Code","Nwk_Code", "Gen_Code",
                                "Fuel_Code", "Tech_Code","Trading_Date"),
