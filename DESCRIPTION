@@ -9,4 +9,4 @@ License: MIT License
 Depends: data.table, flextable, forcats, hms, lubridate, utils, curl, readr
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2
