@@ -104,6 +104,7 @@ message("...to: ", max(orig_DT$dv_dateTime , na.rm = TRUE))
 
 # make wide for ease of aggregation ----
 # sum over fuel code
+orig_DT[, kWh := as.numeric(kWh)] # just in case
 nzGenMix_wide_dt <- dcast(orig_DT[!is.na(dv_dateTime)], dv_dateTime ~ Fuel_Code, value.var = "kWh", fun.aggregate = sum)
 
 # add derived variables used later ----
