@@ -407,7 +407,7 @@ make_NgesoPlots <- function(dt,
                                       y = dv_hms, fill = get(var))) +
     geom_tile() +
     theme(legend.position = "bottom") +
-    scale_x_date(date_labels="%b %Y",date_breaks  ="3 month") +
+    scale_x_date(date_labels="%b %Y",date_breaks  ="6 months") +
     theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
     scale_fill_continuous(name = paste0(scaleLab, " (", unit_lab, ")"),
                           high = highColour,
@@ -434,12 +434,12 @@ make_NgesoPlots <- function(dt,
   ), keyby = .(dv_date)]
   
   #> mean half-hourly ----
-  yLab <- paste0("Mean half-hourly ", scaleLab, " (", unit_lab, ")")
+  yLab <- paste0("Mean half-hourly ", scaleLab, " (", unit_lab, ") per day")
   yh <- max(plotDT$mean)
   res$line_mean <- ggplot2::ggplot(plotDT, aes(x = dv_date, 
                                               y = mean, colour = mean)) +
     theme(legend.position = "bottom") +
-    scale_x_date(date_labels="%b %Y",date_breaks  ="3 month") +
+    scale_x_date(date_labels="%b %Y",date_breaks  ="6 months") +
     theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
     geom_line() +
     scale_color_continuous(name = yLab,
@@ -455,11 +455,11 @@ make_NgesoPlots <- function(dt,
                label = paste0("Maximum value: ", round(yh,1), unit_lab))
   
   #> max half-hourly ----
-  yLab <- paste0("Maximum half-hourly ", scaleLab, " (", unit_lab, ")")
+  yLab <- paste0("Maximum half-hourly ", scaleLab, " (", unit_lab, ") per day")
   yh <- max(plotDT$max)
   res$line_max <- ggplot2::ggplot(plotDT, aes(x = dv_date, y = max, colour = max)) +
     theme(legend.position = "bottom") +
-    scale_x_date(date_labels="%b %Y",date_breaks  ="3 month") +
+    scale_x_date(date_labels="%b %Y",date_breaks  ="6 months") +
     theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
     geom_line() +
     scale_color_continuous(name = yLab,
@@ -475,11 +475,11 @@ make_NgesoPlots <- function(dt,
                label = paste0("Historical maximum: ", round(yh,1), unit_lab))
      
   #> min half-hourly ----
-  yLab <- paste0("Minimum half-hourly ", scaleLab, " (", unit_lab, ")")
+  yLab <- paste0("Minimum half-hourly ", scaleLab, " (", unit_lab, ") per day")
   yh <- min(plotDT$min)
   res$line_min <- ggplot2::ggplot(plotDT, aes(x = dv_date, y = min, colour = min)) +
     theme(legend.position = "bottom") +
-    scale_x_date(date_labels="%b %Y",date_breaks  ="3 month") +
+    scale_x_date(date_labels="%b %Y",date_breaks  ="6 months") +
     theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
     geom_line() +
     scale_color_continuous(name = yLab,
